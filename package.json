@@ -1,0 +1,18 @@
+{
+  "name": "prototype-tabular-recipe-notation",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Static GitHub Pages prototype for rendering recipe URLs as Tabular Recipe Notation graphics.",
+  "scripts": {
+    "check": "node --check src/app.js && node tests/app.test.js && python3 tests/check_html.py",
+    "serve": "python3 -m http.server 4173 --bind 127.0.0.1"
+  },
+  "keywords": [
+    "recipe",
+    "notation",
+    "svg",
+    "github-pages",
+    "prototype"
+  ],
+  "license": "UNLICENSED"
+}
