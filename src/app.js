@@ -23,6 +23,39 @@ Servings: 4
 4. Drain pasta, reserving 1/2 cup pasta water, then toss pasta with sauce.
 5. Fold in parmesan, loosen with pasta water if needed, and finish with basil.`;
 
+  const SKYLER_READER_SAMPLE = `Title: Crispy Oven-Fried Chicken Cutlet (Ground Chicken)
+
+### Common mistakes & how to avoid them
+*   **The “Soggy Bottom” Syndrome:** If you don’t lightly oil the sheet pan before transferring the cutlet, the bottom won’t “fry” against the metal.
+*   **Skipping the Rest:** Cutting into the meat the second it comes out of the oven is tempting.
+*   ▢  1 lb.ground chicken or ground turkey
+*   ▢  1 tsp kosher salt
+*   ▢  1 tsp garlic powder
+*   ▢  1 tsp onion powder
+*   ▢  All-purpose flour eyeball for dusting + shaping
+*   ▢  2 eggs whisked
+*   ▢  1 full box panko breadcrumbs use as needed—don’t skimp
+*   ▢  Avocado oil spray
+*   ▢  Flaky sea salt for finishing
+#### Prepthe Meat
+*   In a bowl, mix the ground meat with salt, garlic powder, and onion powder until just combined.
+*   Let it sit for a few minutes while you prep.
+#### Shape the Cutlet
+*   Lay out a large sheet of parchment paper and generously sprinkle it with flour.
+*   Place the meat on top and press into a very thin, large oval—like a pounded chicken cutlet.
+#### Bread the First Side
+*   Brush the surface with egg wash.
+*   Cover completely with panko breadcrumbs—press gently so they adhere.
+*   Spray with avocado oil until the breadcrumbs are fully hydrated.
+#### Bake
+*   Bake at 450°F in a convection oven or air fry for 15 minutes.
+#### Broilto Finish
+*   Broil for 4–5 minutes, until deeply golden brown and crispy. Watch it closely.
+#### Finish
+*   Remove from the oven and immediately sprinkle with flaky sea salt.
+*   Let it rest for 1–2 minutes, then slice.
+![Image 3](https://example.com/image.png)`;
+
   const STOP_WORDS = new Set([
     "a",
     "an",
@@ -78,8 +111,26 @@ Servings: 4
     return line
       .replace(/^[-*•]\s+/, "")
       .replace(/^\d+[.)]\s+/, "")
+      .replace(/^▢\s*/, "")
+      .replace(/^\[|\]$/g, "")
       .replace(/\s+/g, " ")
       .trim();
+  }
+
+  function isMarkdownHeading(line) {
+    return /^#{1,6}\s*/.test(line);
+  }
+
+  function headingText(line) {
+    return line.replace(/^#{1,6}\s*/, "").trim();
+  }
+
+  function isTocLink(line) {
+    return /^\d+[.)]\s+\[[^\]]+\]\([^)]*#[^)]+\)\s*$/.test(line);
+  }
+
+  function isImageLine(line) {
+    return /^!\[[^\]]*\]/.test(line);
   }
 
   function titleFromLines(lines) {
@@ -91,16 +142,93 @@ Servings: 4
   }
 
   function findSection(lines, headingPatterns, stopPatterns) {
-    const start = lines.findIndex((line) => headingPatterns.some((pattern) => pattern.test(line)));
-    if (start === -1) return [];
-    const collected = [];
-    for (let index = start + 1; index < lines.length; index += 1) {
-      const line = lines[index];
-      if (/^#{1,4}\s+/.test(line) && stopPatterns.some((pattern) => pattern.test(line))) break;
-      if (/^#{1,4}\s+/.test(line) && collected.length > 0) break;
-      collected.push(line);
+    const starts = [];
+    lines.forEach((line, index) => {
+      if (isTocLink(line)) return;
+      if (headingPatterns.some((pattern) => pattern.test(line))) starts.push(index);
+    });
+    if (starts.length === 0) return [];
+
+    let best = [];
+    for (const start of starts) {
+      const collected = [];
+      for (let index = start + 1; index < lines.length; index += 1) {
+        const line = lines[index];
+        if (isTocLink(line) || isImageLine(line)) continue;
+        if (isMarkdownHeading(line)) {
+          if (stopPatterns.some((pattern) => pattern.test(line))) break;
+          if (collected.length > 0) break;
+          continue;
+        }
+        collected.push(line);
+      }
+      const usefulCount = collected.filter((line) => /^[-*•]\s+/.test(line) || /^\d+[.)]\s+/.test(line)).length;
+      const score = usefulCount * 10 + collected.length;
+      const bestScore = best.filter((line) => /^[-*•]\s+/.test(line) || /^\d+[.)]\s+/.test(line)).length * 10 + best.length;
+      if (score > bestScore) best = collected;
     }
-    return collected;
+    return best;
+  }
+
+  function extractStructuredRecipe(lines) {
+    const candidates = [];
+    lines.forEach((line, index) => {
+      if (!isMarkdownHeading(line)) return;
+      const text = headingText(line);
+      const score = [
+        /ingredients?/i.test(text) ? 3 : 0,
+        /directions?|instructions?|method|steps?/i.test(text) ? 4 : 0,
+        /recipe/i.test(text) ? 1 : 0,
+      ].reduce((sum, value) => sum + value, 0);
+      if (score > 0) candidates.push({ index, text, score });
+    });
+
+    let best = null;
+    for (let i = 0; i < candidates.length; i += 1) {
+      for (let j = i + 1; j < candidates.length; j += 1) {
+        const first = candidates[i];
+        const second = candidates[j];
+        const firstIsIngredient = /ingredients?/i.test(first.text);
+        const secondIsDirection = /directions?|instructions?|method|steps?/i.test(second.text);
+        if (!firstIsIngredient || !secondIsDirection) continue;
+        const ingredientBlock = lines.slice(first.index + 1, second.index);
+        const nextHeading = candidates.find((candidate) => candidate.index > second.index)?.index ?? lines.length;
+        const stepBlock = lines.slice(second.index + 1, nextHeading);
+        const ingredients = ingredientBlock
+          .filter((line) => /^[-*•]\s+/.test(line))
+          .map(cleanListMarker)
+          .filter(Boolean);
+        const steps = stepBlock
+          .flatMap((line) => (isMarkdownHeading(line) ? [] : [line]))
+          .filter((line) => /^[-*•]\s+|^\d+[.)]\s+/.test(line))
+          .map(cleanListMarker)
+          .filter(Boolean);
+        const score = ingredients.length * 3 + steps.length * 5 - Math.max(0, ingredientBlock.length - ingredients.length * 2);
+        if (!best || score > best.score) best = { ingredients, steps, score };
+      }
+    }
+
+    if (best && (best.ingredients.length || best.steps.length)) return best;
+
+    const checkboxIngredientIndex = lines.findIndex((line) => /^[-*•]\s+▢/.test(line));
+    if (checkboxIngredientIndex !== -1) {
+      const ingredients = [];
+      let index = checkboxIngredientIndex;
+      while (index < lines.length && /^[-*•]\s+▢/.test(lines[index])) {
+        ingredients.push(cleanListMarker(lines[index]));
+        index += 1;
+      }
+      const steps = [];
+      for (; index < lines.length; index += 1) {
+        const line = lines[index];
+        if (isImageLine(line)) break;
+        if (isMarkdownHeading(line)) continue;
+        if (/^[-*•]\s+/.test(line) || /^\d+[.)]\s+/.test(line)) steps.push(cleanListMarker(line));
+      }
+      if (ingredients.length || steps.length) return { ingredients, steps, score: ingredients.length * 3 + steps.length * 5 };
+    }
+
+    return null;
   }
 
   function parseTimes(lines) {
@@ -132,38 +260,44 @@ Servings: 4
 
   function parseRecipeText(text, sourceUrl = "Demo") {
     const lines = normalizeLines(text);
-    const ingredientLines = findSection(
-      lines,
-      [/^#{1,4}\s*ingredients?\b/i, /^ingredients?$/i],
-      [/^#{1,4}\s*(instructions?|directions?|method|steps?)\b/i],
-    );
-    const stepLines = findSection(
-      lines,
-      [/^#{1,4}\s*(instructions?|directions?|method|steps?)\b/i, /^(instructions?|directions?|method|steps?)$/i],
-      [/^#{1,4}\s*(notes?|nutrition|ingredients?)\b/i],
-    );
+    const structured = extractStructuredRecipe(lines);
+    const ingredientLines = structured?.ingredients?.length
+      ? structured.ingredients
+      : findSection(
+          lines,
+          [/^#{1,6}\s*ingredients?\b/i, /^ingredients?$/i],
+          [/^#{1,6}\s*(directions?|instructions?|method|steps?)\b/i],
+        );
+    const stepLines = structured?.steps?.length
+      ? structured.steps
+      : findSection(
+          lines,
+          [/^#{1,6}\s*(directions?|instructions?|method|steps?)\b/i, /^(directions?|instructions?|method|steps?)$/i],
+          [/^#{1,6}\s*(notes?|nutrition|ingredients?|recipe)\b/i],
+        );
 
     let ingredients = ingredientLines
       .map(cleanListMarker)
-      .filter((line) => line && !/^#{1,4}/.test(line))
+      .filter((line) => line && !isMarkdownHeading(line) && !isTocLink(line) && !isImageLine(line))
       .slice(0, 18);
     let steps = stepLines
       .map(cleanListMarker)
-      .filter((line) => line && !/^#{1,4}/.test(line))
-      .slice(0, 12);
+      .filter((line) => line && !isMarkdownHeading(line) && !isTocLink(line) && !isImageLine(line))
+      .slice(0, 24);
 
     if (ingredients.length === 0) {
       ingredients = lines
-        .filter((line) => /^[-*•]\s+/.test(line) && /\d|cup|tsp|tbsp|ounce|gram|salt|oil/i.test(line))
+        .filter((line) => /^[-*•]\s+/.test(line) && /\d|cup|tsp|tbsp|ounce|gram|salt|oil|▢/i.test(line))
         .map(cleanListMarker)
+        .filter((line) => !isTocLink(line) && !isImageLine(line))
         .slice(0, 18);
     }
 
     if (steps.length === 0) {
       steps = lines
-        .filter((line) => /^\d+[.)]\s+/.test(line))
+        .filter((line) => /^\d+[.)]\s+/.test(line) && !isTocLink(line))
         .map(cleanListMarker)
-        .slice(0, 12);
+        .slice(0, 18);
     }
 
     const times = parseTimes(lines);
@@ -390,7 +524,7 @@ Servings: 4
 
   if (typeof document !== "undefined") boot();
 
-  const api = { parseRecipeText, buildTrnModel, renderTrnSvg, readerUrl, DEMO_RECIPE_TEXT };
+  const api = { parseRecipeText, buildTrnModel, renderTrnSvg, readerUrl, DEMO_RECIPE_TEXT, SKYLER_READER_SAMPLE };
   if (typeof window !== "undefined") window.TRN = api;
   if (typeof module !== "undefined") module.exports = api;
 })();
