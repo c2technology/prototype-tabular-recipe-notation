@@ -20,5 +20,5 @@ parser.feed(html)
 required_ids = {'recipe-form', 'recipe-url', 'load-demo', 'download-svg', 'status', 'graphic', 'recipe-summary', 'steps'}
 missing = required_ids - parser.ids
 assert not missing, f'missing ids: {sorted(missing)}'
-assert 'src/app.js' in parser.scripts
+assert 'src/app.js' in ' '.join(parser.scripts)
 print('html sanity passed')
