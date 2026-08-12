@@ -56,6 +56,333 @@ Servings: 4
 *   Let it rest for 1–2 minutes, then slice.
 ![Image 3](https://example.com/image.png)`;
 
+  const SKYLER_JSON_LD_SAMPLE = `{
+  "@type": "Recipe",
+  "name": "Giant Crispy Oven-Fried Ground Chicken Cutlet",
+  "author": {
+    "@id": "https://diningwithskyler.com/#/schema/person/8c24a1178bbf4719397e4b165cb353c1"
+  },
+  "description": "A giant, ultra-thin ground chicken cutlet coated in crispy panko and baked on a sheet pan until deeply golden and crunchy\u2014no frying required. It delivers all the shatteringly crisp, golden-brown satisfaction of fried chicken, but on a single sheet pan, without the oily mess, making it perfect for an easy, high-impact weeknight dinner.",
+  "datePublished": "2026-04-06T13:14:51+00:00",
+  "image": [
+    "https://diningwithskyler.com/wp-content/uploads/2026/03/easy-chicken-cutlet-recipe-scaled.jpeg",
+    "https://diningwithskyler.com/wp-content/uploads/2026/03/easy-chicken-cutlet-recipe-500x500.jpeg",
+    "https://diningwithskyler.com/wp-content/uploads/2026/03/easy-chicken-cutlet-recipe-500x375.jpeg",
+    "https://diningwithskyler.com/wp-content/uploads/2026/03/easy-chicken-cutlet-recipe-480x270.jpeg"
+  ],
+  "recipeYield": [
+    "2"
+  ],
+  "recipeIngredient": [
+    "1 lb. ground chicken or ground turkey",
+    "1 tsp kosher salt",
+    "1 tsp garlic powder",
+    "1 tsp onion powder",
+    "All-purpose flour (eyeball for dusting + shaping)",
+    "2  eggs (whisked)",
+    "1  full box panko breadcrumbs (use as needed\u2014don\u2019t skimp)",
+    "Avocado oil spray",
+    "Flaky sea salt (for finishing)"
+  ],
+  "recipeInstructions": [
+    {
+      "@type": "HowToSection",
+      "name": "Prepthe Meat",
+      "itemListElement": [
+        {
+          "@type": "HowToStep",
+          "text": "In a bowl, mix the ground meat with salt, garlic powder, and onion powder until just combined.",
+          "name": "In a bowl, mix the ground meat with salt, garlic powder, and onion powder until just combined.",
+          "url": "https://diningwithskyler.com/ground-chicken-cutlet/#wprm-recipe-20934-step-0-0"
+        },
+        {
+          "@type": "HowToStep",
+          "text": "Let it sit for a few minutes while you prep.",
+          "name": "Let it sit for a few minutes while you prep.",
+          "url": "https://diningwithskyler.com/ground-chicken-cutlet/#wprm-recipe-20934-step-0-1"
+        }
+      ]
+    },
+    {
+      "@type": "HowToSection",
+      "name": "Shape the Cutlet",
+      "itemListElement": [
+        {
+          "@type": "HowToStep",
+          "text": "Lay out a large sheet of parchment paper and generously sprinkle it with flour.",
+          "name": "Lay out a large sheet of parchment paper and generously sprinkle it with flour.",
+          "url": "https://diningwithskyler.com/ground-chicken-cutlet/#wprm-recipe-20934-step-1-0"
+        },
+        {
+          "@type": "HowToStep",
+          "text": "Place the meat on top and press into a very thin, large oval\u2014like a pounded chicken cutlet.",
+          "name": "Place the meat on top and press into a very thin, large oval\u2014like a pounded chicken cutlet.",
+          "url": "https://diningwithskyler.com/ground-chicken-cutlet/#wprm-recipe-20934-step-1-1"
+        },
+        {
+          "@type": "HowToStep",
+          "text": "It should be big enough to nearly fill a sheet pan.",
+          "name": "It should be big enough to nearly fill a sheet pan.",
+          "url": "https://diningwithskyler.com/ground-chicken-cutlet/#wprm-recipe-20934-step-1-2"
+        },
+        {
+          "@type": "HowToStep",
+          "text": "Lightly sprinkle flour over the top surface.",
+          "name": "Lightly sprinkle flour over the top surface.",
+          "url": "https://diningwithskyler.com/ground-chicken-cutlet/#wprm-recipe-20934-step-1-3"
+        }
+      ]
+    },
+    {
+      "@type": "HowToSection",
+      "name": "Bread the First Side",
+      "itemListElement": [
+        {
+          "@type": "HowToStep",
+          "text": "Brush the surface with egg wash.",
+          "name": "Brush the surface with egg wash.",
+          "url": "https://diningwithskyler.com/ground-chicken-cutlet/#wprm-recipe-20934-step-2-0"
+        },
+        {
+          "@type": "HowToStep",
+          "text": "Cover completely with panko breadcrumbs\u2014press gently so they adhere.",
+          "name": "Cover completely with panko breadcrumbs\u2014press gently so they adhere.",
+          "url": "https://diningwithskyler.com/ground-chicken-cutlet/#wprm-recipe-20934-step-2-1"
+        },
+        {
+          "@type": "HowToStep",
+          "text": "Spray with avocado oil until the breadcrumbs are fully hydrated.",
+          "name": "Spray with avocado oil until the breadcrumbs are fully hydrated.",
+          "url": "https://diningwithskyler.com/ground-chicken-cutlet/#wprm-recipe-20934-step-2-2"
+        },
+        {
+          "@type": "HowToStep",
+          "text": "Not lightly coated\u2014fully coated so they can \u201cfry\u201d in the oven.",
+          "name": "Not lightly coated\u2014fully coated so they can \u201cfry\u201d in the oven.",
+          "url": "https://diningwithskyler.com/ground-chicken-cutlet/#wprm-recipe-20934-step-2-3"
+        }
+      ]
+    },
+    {
+      "@type": "HowToSection",
+      "name": "Flip+ Bread the Second Side",
+      "itemListElement": [
+        {
+          "@type": "HowToStep",
+          "text": "Place another large sheet of parchment on top and carefully flip.",
+          "name": "Place another large sheet of parchment on top and carefully flip.",
+          "url": "https://diningwithskyler.com/ground-chicken-cutlet/#wprm-recipe-20934-step-3-0"
+        },
+        {
+          "@type": "HowToStep",
+          "text": "Remove the top parchment so the uncoated side is facing up.",
+          "name": "Remove the top parchment so the uncoated side is facing up.",
+          "url": "https://diningwithskyler.com/ground-chicken-cutlet/#wprm-recipe-20934-step-3-1"
+        },
+        {
+          "@type": "HowToStep",
+          "text": "Brush with egg wash, then fully coat with panko, pressing gently.",
+          "name": "Brush with egg wash, then fully coat with panko, pressing gently.",
+          "url": "https://diningwithskyler.com/ground-chicken-cutlet/#wprm-recipe-20934-step-3-2"
+        },
+        {
+          "@type": "HowToStep",
+          "text": "Spray again with avocado oil until the breadcrumbs are fully hydrated.",
+          "name": "Spray again with avocado oil until the breadcrumbs are fully hydrated.",
+          "url": "https://diningwithskyler.com/ground-chicken-cutlet/#wprm-recipe-20934-step-3-3"
+        }
+      ]
+    },
+    {
+      "@type": "HowToSection",
+      "name": "Bake",
+      "itemListElement": [
+        {
+          "@type": "HowToStep",
+          "text": "Lightly spray or brush a large sheet pan with avocado oil.",
+          "name": "Lightly spray or brush a large sheet pan with avocado oil.",
+          "url": "https://diningwithskyler.com/ground-chicken-cutlet/#wprm-recipe-20934-step-4-0"
+        },
+        {
+          "@type": "HowToStep",
+          "text": "Carefully transfer the cutlet from the parchment onto the sheet pan.",
+          "name": "Carefully transfer the cutlet from the parchment onto the sheet pan.",
+          "url": "https://diningwithskyler.com/ground-chicken-cutlet/#wprm-recipe-20934-step-4-1"
+        },
+        {
+          "@type": "HowToStep",
+          "text": "Bake at 450\u00b0F in a convection oven or air fry for 15 minutes.",
+          "name": "Bake at 450\u00b0F in a convection oven or air fry for 15 minutes.",
+          "url": "https://diningwithskyler.com/ground-chicken-cutlet/#wprm-recipe-20934-step-4-2"
+        }
+      ]
+    },
+    {
+      "@type": "HowToSection",
+      "name": "Broilto Finish",
+      "itemListElement": [
+        {
+          "@type": "HowToStep",
+          "text": "Broil for 4\u20135 minutes, until deeply golden brown and crispy. Watch it closely.",
+          "name": "Broil for 4\u20135 minutes, until deeply golden brown and crispy. Watch it closely.",
+          "url": "https://diningwithskyler.com/ground-chicken-cutlet/#wprm-recipe-20934-step-5-0"
+        }
+      ]
+    },
+    {
+      "@type": "HowToSection",
+      "name": "Finish",
+      "itemListElement": [
+        {
+          "@type": "HowToStep",
+          "text": "Remove from the oven and immediately sprinkle with flaky sea salt.",
+          "name": "Remove from the oven and immediately sprinkle with flaky sea salt.",
+          "url": "https://diningwithskyler.com/ground-chicken-cutlet/#wprm-recipe-20934-step-6-0"
+        },
+        {
+          "@type": "HowToStep",
+          "text": "Let it rest for 1\u20132 minutes, then slice.",
+          "name": "Let it rest for 1\u20132 minutes, then slice.",
+          "url": "https://diningwithskyler.com/ground-chicken-cutlet/#wprm-recipe-20934-step-6-1"
+        }
+      ]
+    }
+  ],
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.98",
+    "ratingCount": "34",
+    "reviewCount": "8"
+  },
+  "review": [
+    {
+      "@type": "Review",
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": "5"
+      },
+      "reviewBody": "Absolute winner winner chicken dinner! Both the wife &amp; teenager love it! Thank you, Skyler!!",
+      "author": {
+        "@type": "Person",
+        "name": "Brian"
+      },
+      "datePublished": "2026-08-05"
+    },
+    {
+      "@type": "Review",
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": "5"
+      },
+      "reviewBody": "WOW. An instant classic!!!",
+      "author": {
+        "@type": "Person",
+        "name": "Audrey"
+      },
+      "datePublished": "2026-07-28"
+    },
+    {
+      "@type": "Review",
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": "5"
+      },
+      "reviewBody": "Easy to make, yummy and no frying and no messy stove to clean up afterwards",
+      "author": {
+        "@type": "Person",
+        "name": "Amy"
+      },
+      "datePublished": "2026-06-09"
+    },
+    {
+      "@type": "Review",
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": "5"
+      },
+      "reviewBody": "I made this for a couple of crunchy chicken wraps this evening for dinner for my wife and me. It was very good and oh so filling. Tomorrow, I will reheat the leftovers for Chicken Parmesan. Fingers crossed \ud83e\udd1e.",
+      "author": {
+        "@type": "Person",
+        "name": "Scott"
+      },
+      "datePublished": "2026-06-03"
+    },
+    {
+      "@type": "Review",
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": "5"
+      },
+      "reviewBody": "I used ground chicken thigh meat. It was perfect!! Really easy from start to finish. I paired it with a pesto roasted garlic mayo and the next day I paired it with a Chick Fil A sauce and that was perfect too.",
+      "author": {
+        "@type": "Person",
+        "name": "Elisa"
+      },
+      "datePublished": "2026-05-22"
+    },
+    {
+      "@type": "Review",
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": "5"
+      },
+      "reviewBody": "Have never tried anything better, i seasoned with paprika, garlic powder, onion powder, salt, pepper, and Trader Joes dill seasoning. I seasoned the bread crumbs, chicken mince, and egg wash!!",
+      "author": {
+        "@type": "Person",
+        "name": "Clio Anesti"
+      },
+      "datePublished": "2026-05-22"
+    },
+    {
+      "@type": "Review",
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": "5"
+      },
+      "reviewBody": "here to say this was perfection!! and I truly appreciate how thorough you are and how you anticipate any questions I might have had about prepping ahead etc. this was my first recipe from this blog and now I trust you completely!! \ud83d\ude4f\ud83c\udffc",
+      "author": {
+        "@type": "Person",
+        "name": "kat"
+      },
+      "datePublished": "2026-05-21"
+    },
+    {
+      "@type": "Review",
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": "5"
+      },
+      "reviewBody": "Delicious! I used ground turkey because it\u2019s what I had on hand and everyone in the family loved it.",
+      "author": {
+        "@type": "Person",
+        "name": "Beth Mathers"
+      },
+      "datePublished": "2026-05-20"
+    }
+  ],
+  "recipeCategory": [
+    "Main Course"
+  ],
+  "video": {
+    "@type": "VideoObject",
+    "name": "Giant Crispy Oven-Fried Ground Chicken Cutlet Recipe Video",
+    "description": "A giant, ultra-thin ground chicken cutlet coated in crispy panko and baked on a sheet pan until deeply golden and crunchy\u2014no frying required. It delivers all the shatteringly crisp, golden-brown satisfaction of fried chicken, but on a single sheet pan, without the oily mess, making it perfect for an easy, high-impact weeknight dinner.",
+    "thumbnailUrl": [
+      "https://diningwithskyler.com/wp-content/uploads/2026/03/easy-chicken-cutlet-recipe-scaled.jpeg",
+      "https://diningwithskyler.com/wp-content/uploads/2026/03/easy-chicken-cutlet-recipe-500x500.jpeg",
+      "https://diningwithskyler.com/wp-content/uploads/2026/03/easy-chicken-cutlet-recipe-500x375.jpeg",
+      "https://diningwithskyler.com/wp-content/uploads/2026/03/easy-chicken-cutlet-recipe-480x270.jpeg"
+    ],
+    "uploadDate": "2026-04-06T13:14:51+00:00",
+    "embedUrl": "https://www.instagram.com/reel/DYNQBMmKo0y/embed"
+  },
+  "@id": "https://diningwithskyler.com/ground-chicken-cutlet/#recipe",
+  "isPartOf": {
+    "@id": "https://diningwithskyler.com/ground-chicken-cutlet/#article"
+  },
+  "mainEntityOfPage": "https://diningwithskyler.com/ground-chicken-cutlet/"
+}`;
+
   const STOP_WORDS = new Set([
     "a",
     "an",
@@ -99,6 +426,10 @@ Servings: 4
     return `https://r.jina.ai/http://r.jina.ai/http://${url.href}`;
   }
 
+  function metadataUrl(inputUrl) {
+    return `https://api.allorigins.win/raw?url=${encodeURIComponent(inputUrl)}`;
+  }
+
   function normalizeLines(text) {
     return text
       .replace(/\r/g, "")
@@ -131,6 +462,165 @@ Servings: 4
 
   function isImageLine(line) {
     return /^!\[[^\]]*\]/.test(line);
+  }
+
+
+  function htmlDecode(value) {
+    const text = String(value ?? "");
+    if (typeof document !== "undefined") {
+      const textarea = document.createElement("textarea");
+      textarea.innerHTML = text;
+      return textarea.value;
+    }
+    return text
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'");
+  }
+
+  function stripHtml(value) {
+    return htmlDecode(String(value ?? "").replace(/<[^>]*>/g, " ")).replace(/\s+/g, " ").trim();
+  }
+
+  function findBalancedJsonEnd(text, start) {
+    const open = text[start];
+    const close = open === "{" ? "}" : "]";
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    for (let index = start; index < text.length; index += 1) {
+      const char = text[index];
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (char === "\\") escaped = true;
+        else if (char === '"') inString = false;
+        continue;
+      }
+      if (char === '"') inString = true;
+      else if (char === open) depth += 1;
+      else if (char === close) {
+        depth -= 1;
+        if (depth === 0) return index + 1;
+      }
+    }
+    return -1;
+  }
+
+  function extractJsonLdBlocks(rawText) {
+    const blocks = [];
+    const scriptPattern = /<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+    let match;
+    while ((match = scriptPattern.exec(rawText))) {
+      blocks.push(htmlDecode(match[1]).trim());
+    }
+
+    if (blocks.length === 0 && /"@type"\s*:\s*"Recipe"/.test(rawText)) {
+      let searchIndex = 0;
+      while (searchIndex < rawText.length) {
+        const typeIndex = rawText.indexOf('"@type"', searchIndex);
+        if (typeIndex === -1) break;
+        const recipeType = rawText.slice(typeIndex, typeIndex + 80);
+        if (!/"Recipe"/.test(recipeType)) {
+          searchIndex = typeIndex + 7;
+          continue;
+        }
+        const objectStart = rawText.lastIndexOf("{", typeIndex);
+        const objectEnd = objectStart === -1 ? -1 : findBalancedJsonEnd(rawText, objectStart);
+        if (objectStart !== -1 && objectEnd !== -1) blocks.push(rawText.slice(objectStart, objectEnd));
+        searchIndex = typeIndex + 7;
+      }
+    }
+    return blocks;
+  }
+
+  function asArray(value) {
+    if (value == null) return [];
+    return Array.isArray(value) ? value : [value];
+  }
+
+  function jsonLdTypes(node) {
+    return asArray(node?.["@type"]).map((type) => String(type).toLowerCase());
+  }
+
+  function findRecipeNodes(node, found = []) {
+    if (Array.isArray(node)) {
+      node.forEach((item) => findRecipeNodes(item, found));
+    } else if (node && typeof node === "object") {
+      if (jsonLdTypes(node).includes("recipe")) found.push(node);
+      Object.values(node).forEach((value) => findRecipeNodes(value, found));
+    }
+    return found;
+  }
+
+  function instructionStepsFromJsonLd(value, sectionName = "") {
+    const steps = [];
+    asArray(value).forEach((item) => {
+      if (typeof item === "string") {
+        const text = stripHtml(item);
+        if (text) steps.push({ text, section: sectionName });
+        return;
+      }
+      if (!item || typeof item !== "object") return;
+      const types = jsonLdTypes(item);
+      const nextSection = types.includes("howtosection") ? stripHtml(item.name || sectionName) : sectionName;
+      if (item.itemListElement) {
+        steps.push(...instructionStepsFromJsonLd(item.itemListElement, nextSection));
+        return;
+      }
+      const text = stripHtml(item.text || item.name || item.description || "");
+      if (text) steps.push({ text, section: nextSection });
+    });
+    return steps;
+  }
+
+  function formatDuration(isoDuration) {
+    const value = String(isoDuration || "").trim();
+    if (!value) return "Unknown";
+    const match = value.match(/^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/i);
+    if (!match) return value;
+    const [, days, hours, minutes, seconds] = match.map((part) => Number(part || 0));
+    const pieces = [];
+    if (days) pieces.push(`${days} day${days === 1 ? "" : "s"}`);
+    if (hours) pieces.push(`${hours} hr${hours === 1 ? "" : "s"}`);
+    if (minutes) pieces.push(`${minutes} min${minutes === 1 ? "" : "s"}`);
+    if (seconds && pieces.length === 0) pieces.push(`${seconds} sec${seconds === 1 ? "" : "s"}`);
+    return pieces.join(" ") || "Unknown";
+  }
+
+  function parseRecipeFromJsonLd(rawText, sourceUrl = "Recipe URL") {
+    for (const block of extractJsonLdBlocks(rawText)) {
+      let parsed;
+      try {
+        parsed = JSON.parse(block);
+      } catch (_error) {
+        continue;
+      }
+      const recipes = findRecipeNodes(parsed).sort((a, b) => {
+        const score = (recipe) => asArray(recipe.recipeIngredient).length * 3 + instructionStepsFromJsonLd(recipe.recipeInstructions).length * 5;
+        return score(b) - score(a);
+      });
+      for (const recipe of recipes) {
+        const ingredients = asArray(recipe.recipeIngredient).map(stripHtml).filter(Boolean);
+        const instructionObjects = instructionStepsFromJsonLd(recipe.recipeInstructions);
+        const steps = instructionObjects.map((step) => step.text).filter(Boolean);
+        if (!ingredients.length && !steps.length) continue;
+        return {
+          title: stripHtml(recipe.name) || titleFromLines(normalizeLines(rawText)),
+          sourceUrl,
+          ingredients,
+          steps,
+          instructionSections: instructionObjects,
+          prep: formatDuration(recipe.prepTime),
+          cook: formatDuration(recipe.cookTime),
+          total: formatDuration(recipe.totalTime),
+          servings: asArray(recipe.recipeYield).map(stripHtml).filter(Boolean).join(", ") || "Unknown",
+          basis: "schema.org Recipe JSON-LD",
+        };
+      }
+    }
+    return null;
   }
 
   function titleFromLines(lines) {
@@ -259,6 +749,9 @@ Servings: 4
   }
 
   function parseRecipeText(text, sourceUrl = "Demo") {
+    const schemaRecipe = parseRecipeFromJsonLd(text, sourceUrl);
+    if (schemaRecipe) return schemaRecipe;
+
     const lines = normalizeLines(text);
     const structured = extractStructuredRecipe(lines);
     const ingredientLines = structured?.ingredients?.length
@@ -307,6 +800,7 @@ Servings: 4
       ingredients,
       steps,
       ...times,
+      basis: structured ? "reader markdown recipe-card heuristic" : "reader markdown fallback",
     };
   }
 
@@ -431,6 +925,22 @@ Servings: 4
     return response.text();
   }
 
+  async function fetchRecipeHtml(url) {
+    const response = await fetch(metadataUrl(url), { headers: { Accept: "text/html,text/plain" } });
+    if (!response.ok) throw new Error(`Recipe metadata fetch failed (${response.status})`);
+    return response.text();
+  }
+
+  async function fetchRecipeSource(url) {
+    try {
+      const htmlText = await fetchRecipeHtml(url);
+      if (parseRecipeFromJsonLd(htmlText, url)) return htmlText;
+    } catch (_error) {
+      // Public metadata proxies can fail CORS/rate-limit checks; fall back to reader markdown.
+    }
+    return fetchRecipeText(url);
+  }
+
   function setStatus(message, isError = false) {
     const status = document.querySelector("#status");
     if (!status) return;
@@ -444,6 +954,7 @@ Servings: 4
     summary.replaceChildren();
     const rows = [
       ["Title", recipe.title],
+      ["Basis", recipe.basis || "Unknown"],
       ["Prep", recipe.prep],
       ["Cook", recipe.cook],
       ["Total", recipe.total],
@@ -489,8 +1000,8 @@ Servings: 4
       return;
     }
     try {
-      setStatus("Fetching recipe page text through the static-page reader service…");
-      const text = await fetchRecipeText(url);
+      setStatus("Fetching recipe metadata, then falling back to readable recipe text if needed…");
+      const text = await fetchRecipeSource(url);
       const recipe = parseRecipeText(text, url);
       renderRecipe(recipe);
       setStatus("Rendered TRN graphic from the linked recipe.");
@@ -524,7 +1035,7 @@ Servings: 4
 
   if (typeof document !== "undefined") boot();
 
-  const api = { parseRecipeText, buildTrnModel, renderTrnSvg, readerUrl, DEMO_RECIPE_TEXT, SKYLER_READER_SAMPLE };
+  const api = { parseRecipeText, parseRecipeFromJsonLd, buildTrnModel, renderTrnSvg, readerUrl, metadataUrl, DEMO_RECIPE_TEXT, SKYLER_READER_SAMPLE, SKYLER_JSON_LD_SAMPLE };
   if (typeof window !== "undefined") window.TRN = api;
   if (typeof module !== "undefined") module.exports = api;
 })();

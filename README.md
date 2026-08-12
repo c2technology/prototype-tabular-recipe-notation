@@ -27,10 +27,11 @@ Open <http://127.0.0.1:4173/>.
 ## How It Works
 
 1. The user enters a recipe URL.
-2. The static page fetches readable markdown text through `r.jina.ai`.
-3. The parser finds likely title, timing, ingredients, and instructions.
-4. The renderer builds an ingredient-by-phase TRN model.
-5. The page renders the model as SVG and enables SVG download.
+2. The static page fetches page HTML through a CORS-capable metadata proxy and looks for schema.org `Recipe` JSON-LD.
+3. If JSON-LD is present, the parser uses standardized `recipeIngredient`, `recipeYield`, duration fields, and `recipeInstructions` / `HowToSection` data.
+4. If metadata is unavailable, the parser falls back to readable markdown text through `r.jina.ai`.
+5. The renderer builds an ingredient-by-phase TRN model.
+6. The page renders the model as SVG and enables SVG download.
 
 ## Verification Commands
 

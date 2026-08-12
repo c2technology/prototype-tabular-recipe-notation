@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const { parseRecipeText, buildTrnModel, renderTrnSvg, readerUrl, DEMO_RECIPE_TEXT, SKYLER_READER_SAMPLE } = require('../src/app.js');
+const { parseRecipeText, buildTrnModel, renderTrnSvg, readerUrl, metadataUrl, DEMO_RECIPE_TEXT, SKYLER_READER_SAMPLE, SKYLER_JSON_LD_SAMPLE } = require('../src/app.js');
 
 const recipe = parseRecipeText(DEMO_RECIPE_TEXT, 'demo');
 assert.equal(recipe.title, 'Weeknight Tomato Pasta');
@@ -27,9 +27,14 @@ assert.equal(
   proxied,
   'https://r.jina.ai/http://r.jina.ai/http://https://www.allrecipes.com/recipe/24074/alysias-basic-meat-lasagna/',
 );
+assert.equal(
+  metadataUrl('https://diningwithskyler.com/ground-chicken-cutlet/'),
+  'https://api.allorigins.win/raw?url=https%3A%2F%2Fdiningwithskyler.com%2Fground-chicken-cutlet%2F',
+);
 
 const skyler = parseRecipeText(SKYLER_READER_SAMPLE, 'skyler');
 assert.equal(skyler.title, 'Crispy Oven-Fried Chicken Cutlet (Ground Chicken)');
+assert.equal(skyler.basis, 'reader markdown recipe-card heuristic');
 assert.deepEqual(skyler.ingredients.slice(0, 4), [
   '1 lb.ground chicken or ground turkey',
   '1 tsp kosher salt',
@@ -40,5 +45,23 @@ assert.ok(!skyler.steps.some((step) => /Why you’ll love this recipe|Ingredient
 assert.ok(skyler.steps.includes('In a bowl, mix the ground meat with salt, garlic powder, and onion powder until just combined.'));
 assert.ok(skyler.steps.includes('Bake at 450°F in a convection oven or air fry for 15 minutes.'));
 assert.ok(skyler.steps.includes('Let it rest for 1–2 minutes, then slice.'));
+
+const skylerSchema = parseRecipeText(SKYLER_JSON_LD_SAMPLE, 'skyler-json');
+assert.equal(skylerSchema.basis, 'schema.org Recipe JSON-LD');
+assert.equal(skylerSchema.title, 'Giant Crispy Oven-Fried Ground Chicken Cutlet');
+assert.equal(skylerSchema.servings, '2');
+assert.equal(skylerSchema.ingredients.length, 9);
+assert.equal(skylerSchema.steps.length, 20);
+assert.deepEqual(skylerSchema.instructionSections.map((step) => step.section).filter((section, index, all) => section && all.indexOf(section) === index), [
+  'Prepthe Meat',
+  'Shape the Cutlet',
+  'Bread the First Side',
+  'Flip+ Bread the Second Side',
+  'Bake',
+  'Broilto Finish',
+  'Finish',
+]);
+assert.equal(skylerSchema.steps[0], 'In a bowl, mix the ground meat with salt, garlic powder, and onion powder until just combined.');
+assert.equal(skylerSchema.steps.at(-1), 'Let it rest for 1–2 minutes, then slice.');
 
 console.log('app tests passed');
