@@ -623,6 +623,35 @@ Servings: 4
     return null;
   }
 
+  function detectRecipeMarkup(sources) {
+    for (const source of sources) {
+      if (!source?.text) continue;
+      const recipe = parseRecipeFromJsonLd(source.text, source.url || "Recipe URL");
+      if (recipe) {
+        return {
+          standard: "schema.org Recipe JSON-LD",
+          confidence: 1,
+          source,
+          parsedRecipe: recipe,
+        };
+      }
+    }
+    return { standard: "none", confidence: 0, source: null, parsedRecipe: null };
+  }
+
+  function extractRecipeFromMarkup(detection) {
+    if (detection?.standard === "schema.org Recipe JSON-LD" && detection.parsedRecipe) return detection.parsedRecipe;
+    throw new Error("No supported recipe markup detected");
+  }
+
+  function runRecipePipeline(sources) {
+    const detection = detectRecipeMarkup(sources);
+    const recipe = extractRecipeFromMarkup(detection);
+    const trn = buildTrnModel(recipe);
+    const svg = renderTrnSvg(recipe);
+    return { detection, recipe, trn, svg };
+  }
+
   function titleFromLines(lines) {
     const markdownTitle = lines.find((line) => /^#\s+[^#]/.test(line));
     if (markdownTitle) return markdownTitle.replace(/^#\s+/, "").trim();
@@ -708,14 +737,24 @@ Servings: 4
         ingredients.push(cleanListMarker(lines[index]));
         index += 1;
       }
-      const steps = [];
+      const instructionSections = [];
+      let currentSection = "Method";
       for (; index < lines.length; index += 1) {
         const line = lines[index];
         if (isImageLine(line)) break;
-        if (isMarkdownHeading(line)) continue;
-        if (/^[-*•]\s+/.test(line) || /^\d+[.)]\s+/.test(line)) steps.push(cleanListMarker(line));
+        if (isMarkdownHeading(line)) {
+          currentSection = headingText(line);
+          continue;
+        }
+        if (/^[-*•]\s+/.test(line) || /^\d+[.)]\s+/.test(line)) {
+          const text = cleanListMarker(line);
+          if (text) instructionSections.push({ text, section: currentSection });
+        }
       }
-      if (ingredients.length || steps.length) return { ingredients, steps, score: ingredients.length * 3 + steps.length * 5 };
+      const steps = instructionSections.map((step) => step.text);
+      if (ingredients.length || steps.length) {
+        return { ingredients, steps, instructionSections, score: ingredients.length * 3 + steps.length * 5 };
+      }
     }
 
     return null;
@@ -800,7 +839,12 @@ Servings: 4
       ingredients,
       steps,
       ...times,
-      basis: structured ? "reader markdown recipe-card heuristic" : "reader markdown fallback",
+      basis: structured?.instructionSections?.length
+        ? "reader markdown section-aware recipe-card heuristic"
+        : structured
+          ? "reader markdown recipe-card heuristic"
+          : "reader markdown fallback",
+      instructionSections: structured?.instructionSections || null,
     };
   }
 
@@ -821,7 +865,65 @@ Servings: 4
     return "Prep";
   }
 
+  function normalizePhaseName(sectionName) {
+    return String(sectionName || "Method")
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .replace(/\s*\+\s*/g, " + ")
+      .replace(/\bPrep(?=the\b)/i, "Prep ")
+      .replace(/\bBroil(?=to\b)/i, "Broil ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/^./, (char) => char.toUpperCase());
+  }
+
+  function ingredientTokens(ingredient) {
+    const raw = String(ingredient || "")
+      .toLowerCase()
+      .replace(/\([^)]*\)/g, " ")
+      .replace(/[^a-z\s-]/g, " ")
+      .split(/\s+/)
+      .filter((word) => word.length > 2 && !STOP_WORDS.has(word));
+    const tokens = new Set(raw);
+    if (raw.includes("chicken") || raw.includes("turkey")) tokens.add("meat");
+    if (raw.includes("panko") || raw.includes("breadcrumbs")) tokens.add("breadcrumbs");
+    if (raw.includes("eggs") || raw.includes("egg")) tokens.add("egg");
+    if (raw.includes("flour")) tokens.add("flour");
+    if (raw.includes("oil")) tokens.add("oil");
+    if (raw.includes("salt")) tokens.add("salt");
+    return [...tokens];
+  }
+
+  function buildSchemaTrnModel(recipe) {
+    const phases = recipe.instructionSections
+      .map((step) => normalizePhaseName(step.section))
+      .filter((phase, index, all) => phase && all.indexOf(phase) === index);
+    const rows = recipe.ingredients.map((ingredient) => ({
+      ingredient,
+      tokens: ingredientTokens(ingredient),
+      cells: Object.fromEntries(phases.map((phase) => [phase, []])),
+    }));
+    const generalRow = {
+      ingredient: "General method",
+      tokens: [],
+      cells: Object.fromEntries(phases.map((phase) => [phase, []])),
+    };
+
+    recipe.instructionSections.forEach((step, index) => {
+      const phase = normalizePhaseName(step.section);
+      const text = step.text;
+      const lower = text.toLowerCase();
+      const targets = rows.filter((row) => row.tokens.some((token) => lower.includes(token)));
+      (targets.length ? targets : [generalRow]).forEach((row) => row.cells[phase].push(`${index + 1}. ${text}`));
+    });
+
+    const activeRows = rows.filter((row) => Object.values(row.cells).some((cell) => cell.length));
+    if (Object.values(generalRow.cells).some((cell) => cell.length)) activeRows.push(generalRow);
+    return { phases, rows: activeRows.length ? activeRows : rows.slice(0, 12) };
+  }
+
   function buildTrnModel(recipe) {
+    if (recipe.instructionSections?.length) return buildSchemaTrnModel(recipe);
+
     const ingredients = recipe.ingredients.length ? recipe.ingredients : ["Ingredient list not found"];
     const steps = recipe.steps.length ? recipe.steps : ["Instruction steps not found"];
     const rows = ingredients.slice(0, 12).map((ingredient) => ({
@@ -829,16 +931,19 @@ Servings: 4
       key: ingredientKey(ingredient),
       cells: { Prep: [], Cook: [], Finish: [] },
     }));
+    const generalRow = { ingredient: "General method", key: "", cells: { Prep: [], Cook: [], Finish: [] } };
 
     steps.forEach((step, index) => {
       const phase = classifyPhase(step, index, steps.length);
       const lower = step.toLowerCase();
       const matches = rows.filter((row) => row.key && lower.includes(row.key));
-      const targets = matches.length ? matches : [rows[Math.min(index, rows.length - 1)]];
+      const targets = matches.length ? matches : [generalRow];
       targets.forEach((row) => row.cells[phase].push(`${index + 1}. ${step}`));
     });
 
-    return { phases: PHASES, rows };
+    const activeRows = rows.filter((row) => Object.values(row.cells).some((cell) => cell.length));
+    if (Object.values(generalRow.cells).some((cell) => cell.length)) activeRows.push(generalRow);
+    return { phases: PHASES, rows: activeRows.length ? activeRows : rows };
   }
 
   function escapeXml(value) {
@@ -1044,7 +1149,7 @@ Servings: 4
 
   if (typeof document !== "undefined") boot();
 
-  const api = { parseRecipeText, parseRecipeFromJsonLd, fetchRecipeSource, buildTrnModel, renderTrnSvg, readerUrl, metadataUrl, DEMO_RECIPE_TEXT, SKYLER_READER_SAMPLE, SKYLER_JSON_LD_SAMPLE };
+  const api = { parseRecipeText, parseRecipeFromJsonLd, detectRecipeMarkup, extractRecipeFromMarkup, runRecipePipeline, fetchRecipeSource, buildTrnModel, renderTrnSvg, readerUrl, metadataUrl, DEMO_RECIPE_TEXT, SKYLER_READER_SAMPLE, SKYLER_JSON_LD_SAMPLE };
   if (typeof window !== "undefined") window.TRN = api;
   if (typeof module !== "undefined") module.exports = api;
 })();
