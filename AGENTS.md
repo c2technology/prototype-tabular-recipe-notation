@@ -1,11 +1,16 @@
 # Agent Notes
 
+## Architecture Alignment Rule
+
+`docs/architecture.md` must stay aligned with code in the same commit. Any change to application structure, exported interfaces, parsing behavior, source-ingestion behavior, TRN model shape, rendering behavior, or major data contracts must update `docs/architecture.md` in that same commit.
+
 ## Read Order
 
 1. `README.md` for user-facing purpose and quick start.
-2. `MEMORY.md` for durable project facts and decisions.
-3. `docs/handoff.md` for current state, verification, and next steps.
-4. GitHub issues for backlog and findings.
+2. `docs/architecture.md` for current architecture and interface contracts.
+3. `MEMORY.md` for durable project facts and decisions.
+4. `docs/handoff.md` for current state, verification, and next steps.
+5. GitHub issues for backlog and findings.
 
 ## Source of Truth
 
