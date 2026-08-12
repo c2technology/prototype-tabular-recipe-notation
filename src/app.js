@@ -925,18 +925,27 @@ Servings: 4
     return response.text();
   }
 
-  async function fetchRecipeHtml(url) {
-    const response = await fetch(metadataUrl(url), { headers: { Accept: "text/html,text/plain" } });
+  function timeoutAfter(ms, message) {
+    return new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(message)), ms);
+    });
+  }
+
+  async function fetchRecipeHtml(url, options = {}) {
+    const response = await Promise.race([
+      fetch(metadataUrl(url), { headers: { Accept: "text/html,text/plain" } }),
+      timeoutAfter(options.metadataTimeoutMs ?? 5000, "Recipe metadata fetch timed out"),
+    ]);
     if (!response.ok) throw new Error(`Recipe metadata fetch failed (${response.status})`);
     return response.text();
   }
 
-  async function fetchRecipeSource(url) {
+  async function fetchRecipeSource(url, options = {}) {
     try {
-      const htmlText = await fetchRecipeHtml(url);
+      const htmlText = await fetchRecipeHtml(url, options);
       if (parseRecipeFromJsonLd(htmlText, url)) return htmlText;
     } catch (_error) {
-      // Public metadata proxies can fail CORS/rate-limit checks; fall back to reader markdown.
+      // Public metadata proxies can hang/fail CORS/rate-limit checks; fall back to reader markdown.
     }
     return fetchRecipeText(url);
   }
@@ -1035,7 +1044,7 @@ Servings: 4
 
   if (typeof document !== "undefined") boot();
 
-  const api = { parseRecipeText, parseRecipeFromJsonLd, buildTrnModel, renderTrnSvg, readerUrl, metadataUrl, DEMO_RECIPE_TEXT, SKYLER_READER_SAMPLE, SKYLER_JSON_LD_SAMPLE };
+  const api = { parseRecipeText, parseRecipeFromJsonLd, fetchRecipeSource, buildTrnModel, renderTrnSvg, readerUrl, metadataUrl, DEMO_RECIPE_TEXT, SKYLER_READER_SAMPLE, SKYLER_JSON_LD_SAMPLE };
   if (typeof window !== "undefined") window.TRN = api;
   if (typeof module !== "undefined") module.exports = api;
 })();

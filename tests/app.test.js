@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const { parseRecipeText, buildTrnModel, renderTrnSvg, readerUrl, metadataUrl, DEMO_RECIPE_TEXT, SKYLER_READER_SAMPLE, SKYLER_JSON_LD_SAMPLE } = require('../src/app.js');
+const { parseRecipeText, buildTrnModel, renderTrnSvg, readerUrl, metadataUrl, fetchRecipeSource, DEMO_RECIPE_TEXT, SKYLER_READER_SAMPLE, SKYLER_JSON_LD_SAMPLE } = require('../src/app.js');
 
 const recipe = parseRecipeText(DEMO_RECIPE_TEXT, 'demo');
 assert.equal(recipe.title, 'Weeknight Tomato Pasta');
@@ -64,4 +64,33 @@ assert.deepEqual(skylerSchema.instructionSections.map((step) => step.section).fi
 assert.equal(skylerSchema.steps[0], 'In a bowl, mix the ground meat with salt, garlic powder, and onion powder until just combined.');
 assert.equal(skylerSchema.steps.at(-1), 'Let it rest for 1–2 minutes, then slice.');
 
-console.log('app tests passed');
+async function testFetchSourceTimeoutFallback() {
+  const originalFetch = global.fetch;
+  const calls = [];
+  global.fetch = async (url) => {
+    calls.push(String(url));
+    if (String(url).startsWith('https://api.allorigins.win/raw')) {
+      return new Promise(() => {});
+    }
+    return { ok: true, text: async () => SKYLER_READER_SAMPLE };
+  };
+  try {
+    const source = await fetchRecipeSource('https://diningwithskyler.com/ground-chicken-cutlet/', { metadataTimeoutMs: 25 });
+    const parsed = parseRecipeText(source, 'skyler-fallback');
+    assert.equal(parsed.basis, 'reader markdown recipe-card heuristic');
+    assert.ok(calls[0].startsWith('https://api.allorigins.win/raw'), 'metadata fetch should be tried first');
+    assert.ok(calls[1].startsWith('https://r.jina.ai/'), 'reader fallback should run after metadata timeout');
+  } finally {
+    global.fetch = originalFetch;
+  }
+}
+
+async function main() {
+  await testFetchSourceTimeoutFallback();
+  console.log('app tests passed');
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
