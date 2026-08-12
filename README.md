@@ -11,7 +11,9 @@ TRN in this prototype means:
 
 ## Current Status
 
-MVP scaffolded. The app is intentionally small and backend-free: vanilla HTML/CSS/JavaScript with no build step.
+MVP deployed and verified on GitHub Pages.
+
+Live app: <https://c2technology.github.io/prototype-tabular-recipe-notation/>
 
 ## Quick Start
 

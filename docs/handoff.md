@@ -4,6 +4,8 @@
 
 A static browser prototype accepts a recipe URL, fetches readable recipe page text, extracts likely ingredients and instructions, and renders a Tabular Recipe Notation graphic as inline SVG.
 
+Live GitHub Pages URL: <https://c2technology.github.io/prototype-tabular-recipe-notation/>
+
 ## What Works
 
 - Built-in demo recipe renders without network access.
