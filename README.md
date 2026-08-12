@@ -65,6 +65,7 @@ Browser verification should confirm:
 - `styles.css` — responsive app styling and TRN presentation.
 - `src/app.js` — URL reader, parser, TRN model, SVG renderer, UI wiring.
 - `tests/` — lightweight no-dependency checks.
+- `docs/architecture.md` — current architecture, interfaces, diagrams, and alignment rule.
 - `MEMORY.md` — durable project facts and decisions.
 - `docs/handoff.md` — current state and next steps.
 - `docs/findings/` — future extraction findings.
