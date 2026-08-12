@@ -74,13 +74,31 @@ assert.deepEqual(skylerModel.phases, [
   'Broil to Finish',
   'Finish',
 ]);
-const saltRow = skylerModel.rows.find((row) => row.ingredient === '1 tsp kosher salt');
-assert.ok(saltRow.cells['Prep the Meat'].some((step) => /mix the ground meat with salt/.test(step)));
-assert.ok(!Object.values(saltRow.cells).flat().some((step) => /Let it sit|Place another large sheet/.test(step)), 'unmatched method steps should not be assigned to salt');
-const generalRow = skylerModel.rows.find((row) => row.ingredient === 'General method');
-assert.ok(generalRow, 'expected a General method row for schema steps that do not name an ingredient');
-assert.ok(skylerModel.rows.find((row) => row.ingredient === '1 lb. ground chicken or ground turkey').cells['Shape the Cutlet'].some((step) => /Place the meat on top/.test(step)));
-assert.ok(generalRow.cells.Finish.some((step) => /Let it rest/.test(step)));
+const ingredientRows = skylerModel.rows.filter((row) => row.type === 'ingredient');
+const methodRows = skylerModel.rows.filter((row) => row.type === 'method');
+assert.equal(ingredientRows.length, skylerSchema.ingredients.length, 'synthetic method rows should not be counted/rendered as ingredients');
+assert.equal(methodRows.length, 1, 'expected one visually distinct method lane');
+assert.ok(!ingredientRows.some((row) => row.label === 'General method'), 'General method must not appear as an ingredient row');
+
+const kosherSaltRow = skylerModel.rows.find((row) => row.label === '1 tsp kosher salt');
+const flakySaltRow = skylerModel.rows.find((row) => row.label === 'Flaky sea salt (for finishing)');
+assert.ok(kosherSaltRow.cells['Prep the Meat'].some((cell) => cell.label === 'mix seasoning'));
+assert.ok(!Object.values(kosherSaltRow.cells).flat().some((cell) => /flaky sea salt/i.test(cell.sourceText)), 'kosher salt should not receive flaky sea salt finishing step');
+assert.ok(!Object.values(flakySaltRow.cells).flat().some((cell) => /mix the ground meat/i.test(cell.sourceText)), 'flaky sea salt should not receive generic prep salt step');
+assert.ok(flakySaltRow.cells.Finish.some((cell) => cell.label === 'finish salt'));
+
+const pankoRow = skylerModel.rows.find((row) => row.label === '1 full box panko breadcrumbs (use as needed—don’t skimp)');
+assert.ok(pankoRow.cells['Bread the First Side'].some((cell) => cell.label === 'coat panko'));
+assert.ok(!Object.values(pankoRow.cells).flat().some((cell) => /avocado oil|sheet pan|parchment/i.test(cell.sourceText)), 'panko row should not absorb oil or transfer method steps');
+const oilRow = skylerModel.rows.find((row) => row.label === 'Avocado oil spray');
+assert.ok(oilRow.cells['Bread the First Side'].some((cell) => cell.label === 'spray oil'));
+assert.ok(oilRow.cells['Flip + Bread the Second Side'].some((cell) => cell.label === 'spray oil'));
+assert.ok(!Object.values(oilRow.cells).flat().some((cell) => cell.label === 'coat panko'), 'oil row should not display panko labels');
+const methodRow = methodRows[0];
+assert.ok(skylerModel.rows.find((row) => row.label === '1 lb. ground chicken or ground turkey').cells['Shape the Cutlet'].some((cell) => cell.label === 'shape cutlet'));
+assert.ok(methodRow.cells.Bake.some((cell) => cell.label === 'bake'));
+assert.ok(methodRow.cells.Finish.some((cell) => cell.label === 'rest'));
+assert.ok(Object.values(skylerModel.rows[0].cells).flat().every((cell) => cell.label.length <= 24), 'TRN cells should use compact labels, not full prose');
 
 const detectedSchema = detectRecipeMarkup([{ kind: 'html', url: 'skyler', text: SKYLER_JSON_LD_SAMPLE }]);
 assert.equal(detectedSchema.standard, 'schema.org Recipe JSON-LD');

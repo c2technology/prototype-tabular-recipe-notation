@@ -877,9 +877,8 @@ Servings: 4
   }
 
   function ingredientTokens(ingredient) {
-    const raw = String(ingredient || "")
-      .toLowerCase()
-      .replace(/\([^)]*\)/g, " ")
+    const withoutParentheticals = String(ingredient || "").toLowerCase().replace(/\([^)]*\)/g, " ");
+    const raw = withoutParentheticals
       .replace(/[^a-z\s-]/g, " ")
       .split(/\s+/)
       .filter((word) => word.length > 2 && !STOP_WORDS.has(word));
@@ -889,8 +888,47 @@ Servings: 4
     if (raw.includes("eggs") || raw.includes("egg")) tokens.add("egg");
     if (raw.includes("flour")) tokens.add("flour");
     if (raw.includes("oil")) tokens.add("oil");
-    if (raw.includes("salt")) tokens.add("salt");
     return [...tokens];
+  }
+
+  function makeCell(label, sourceText, index, confidence = "direct") {
+    return { label, sourceText, stepNumber: index + 1, confidence };
+  }
+
+  function compactActionLabel(text) {
+    const lower = text.toLowerCase();
+    if (/mix .*salt.*garlic powder.*onion powder/.test(lower)) return "mix seasoning";
+    if (/let it sit/.test(lower)) return "rest briefly";
+    if (/sprinkle .*flour|flour over/.test(lower)) return "flour surface";
+    if (/press into|large oval|pounded chicken/.test(lower)) return "shape cutlet";
+    if (/brush .*egg|egg wash/.test(lower)) return "brush egg";
+    if (/spray|brush .*oil|avocado oil/.test(lower)) return "spray oil";
+    if (/panko|breadcrumbs/.test(lower)) return "coat panko";
+    if (/parchment|transfer|sheet pan/.test(lower)) return "transfer";
+    if (/bake/.test(lower)) return "bake";
+    if (/broil/.test(lower)) return "broil";
+    if (/flaky sea salt|sprinkle .*sea salt/.test(lower)) return "finish salt";
+    if (/rest/.test(lower)) return "rest";
+    if (/slice/.test(lower)) return "slice";
+    return lower.split(/\s+/).slice(0, 3).join(" ").slice(0, 24);
+  }
+
+  function targetsForStep(rows, stepText) {
+    const lower = stepText.toLowerCase();
+    if (/flaky sea salt|sprinkle .*sea salt/.test(lower)) {
+      return rows.filter((row) => /flaky sea salt/i.test(row.label));
+    }
+    if (/mix .*salt.*garlic powder.*onion powder/.test(lower)) {
+      return rows.filter((row) => /ground chicken|ground turkey|kosher salt|garlic powder|onion powder/i.test(row.label));
+    }
+    if (/egg wash|brush .*egg/.test(lower)) return rows.filter((row) => /egg/i.test(row.label));
+    if (/avocado oil|spray|brush .*oil/.test(lower)) return rows.filter((row) => /avocado oil/i.test(row.label));
+    if (/panko|breadcrumbs/.test(lower)) return rows.filter((row) => /panko|breadcrumbs/i.test(row.label));
+    if (/flour/.test(lower)) return rows.filter((row) => /flour/i.test(row.label));
+    if (/meat|cutlet|chicken|turkey/.test(lower) && !/parchment|sheet pan|transfer/.test(lower)) {
+      return rows.filter((row) => /ground chicken|ground turkey/i.test(row.label));
+    }
+    return [];
   }
 
   function buildSchemaTrnModel(recipe) {
@@ -898,12 +936,16 @@ Servings: 4
       .map((step) => normalizePhaseName(step.section))
       .filter((phase, index, all) => phase && all.indexOf(phase) === index);
     const rows = recipe.ingredients.map((ingredient) => ({
+      type: "ingredient",
+      label: ingredient,
       ingredient,
       tokens: ingredientTokens(ingredient),
       cells: Object.fromEntries(phases.map((phase) => [phase, []])),
     }));
-    const generalRow = {
-      ingredient: "General method",
+    const methodRow = {
+      type: "method",
+      label: "Method lane",
+      ingredient: "Method lane",
       tokens: [],
       cells: Object.fromEntries(phases.map((phase) => [phase, []])),
     };
@@ -911,14 +953,15 @@ Servings: 4
     recipe.instructionSections.forEach((step, index) => {
       const phase = normalizePhaseName(step.section);
       const text = step.text;
-      const lower = text.toLowerCase();
-      const targets = rows.filter((row) => row.tokens.some((token) => lower.includes(token)));
-      (targets.length ? targets : [generalRow]).forEach((row) => row.cells[phase].push(`${index + 1}. ${text}`));
+      const targets = targetsForStep(rows, text);
+      (targets.length ? targets : [methodRow]).forEach((row) => row.cells[phase].push(makeCell(compactActionLabel(text), text, index, targets.length ? "direct" : "method")));
     });
 
-    const activeRows = rows.filter((row) => Object.values(row.cells).some((cell) => cell.length));
-    if (Object.values(generalRow.cells).some((cell) => cell.length)) activeRows.push(generalRow);
-    return { phases, rows: activeRows.length ? activeRows : rows.slice(0, 12) };
+    const activeIngredientRows = rows.filter((row) => Object.values(row.cells).some((cell) => cell.length));
+    const inactiveIngredientRows = rows.filter((row) => !Object.values(row.cells).some((cell) => cell.length));
+    const allRows = [...activeIngredientRows, ...inactiveIngredientRows];
+    if (Object.values(methodRow.cells).some((cell) => cell.length)) allRows.push(methodRow);
+    return { phases, rows: allRows };
   }
 
   function buildTrnModel(recipe) {
@@ -927,22 +970,24 @@ Servings: 4
     const ingredients = recipe.ingredients.length ? recipe.ingredients : ["Ingredient list not found"];
     const steps = recipe.steps.length ? recipe.steps : ["Instruction steps not found"];
     const rows = ingredients.slice(0, 12).map((ingredient) => ({
+      type: "ingredient",
+      label: ingredient,
       ingredient,
       key: ingredientKey(ingredient),
       cells: { Prep: [], Cook: [], Finish: [] },
     }));
-    const generalRow = { ingredient: "General method", key: "", cells: { Prep: [], Cook: [], Finish: [] } };
+    const methodRow = { type: "method", label: "Method lane", ingredient: "Method lane", key: "", cells: { Prep: [], Cook: [], Finish: [] } };
 
     steps.forEach((step, index) => {
       const phase = classifyPhase(step, index, steps.length);
       const lower = step.toLowerCase();
       const matches = rows.filter((row) => row.key && lower.includes(row.key));
-      const targets = matches.length ? matches : [generalRow];
-      targets.forEach((row) => row.cells[phase].push(`${index + 1}. ${step}`));
+      const targets = matches.length ? matches : [methodRow];
+      targets.forEach((row) => row.cells[phase].push(makeCell(compactActionLabel(step), step, index, matches.length ? "direct" : "method")));
     });
 
     const activeRows = rows.filter((row) => Object.values(row.cells).some((cell) => cell.length));
-    if (Object.values(generalRow.cells).some((cell) => cell.length)) activeRows.push(generalRow);
+    if (Object.values(methodRow.cells).some((cell) => cell.length)) activeRows.push(methodRow);
     return { phases: PHASES, rows: activeRows.length ? activeRows : rows };
   }
 
@@ -1009,12 +1054,12 @@ Servings: 4
     model.rows.forEach((row, rowIndex) => {
       const y = tableY + rowIndex * rowHeight;
       const fill = rowIndex % 2 === 0 ? "#fff8ea" : "#ffffff";
-      svg += `<rect x="24" y="${y}" width="${ingredientWidth}" height="${rowHeight}" fill="#edf4dc" stroke="#ded5c4"/>`;
-      svg += textBlock(row.ingredient, 40, y + 26, ingredientWidth - 28, { size: 13, weight: 750 });
+      svg += `<rect x="24" y="${y}" width="${ingredientWidth}" height="${rowHeight}" fill="${row.type === "method" ? "#e9edf5" : "#edf4dc"}" stroke="#ded5c4"/>`;
+      svg += textBlock(row.label || row.ingredient, 40, y + 26, ingredientWidth - 28, { size: 13, weight: row.type === "method" ? 850 : 750, fill: row.type === "method" ? "#35415c" : "#20201d" });
       model.phases.forEach((phase, phaseIndex) => {
         const x = 24 + ingredientWidth + phaseIndex * phaseWidth;
         svg += `<rect x="${x}" y="${y}" width="${phaseWidth}" height="${rowHeight}" fill="${row.cells[phase].length ? colors[phase] : fill}" stroke="#ded5c4"/>`;
-        const cellText = row.cells[phase].join(" • ");
+        const cellText = row.cells[phase].map((cell) => `${cell.stepNumber}. ${cell.label}`).join(" • ");
         svg += cellText
           ? textBlock(cellText, x + 12, y + 24, phaseWidth - 22, { size: 11, weight: 600 })
           : `<text x="${x + 12}" y="${y + 24}" font-size="11" fill="#b2aa9f">—</text>`;

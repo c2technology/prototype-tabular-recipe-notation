@@ -93,13 +93,20 @@ These are lightweight JavaScript object contracts, not TypeScript types.
 {
   phases: string[],
   rows: Array<{
+    type: 'ingredient' | 'method',
+    label: string,
     ingredient: string,
-    cells: Record<string, string[]>
+    cells: Record<string, Array<{
+      label: string,
+      sourceText: string,
+      stepNumber: number,
+      confidence: 'direct' | 'method' | 'ambiguous'
+    }>>
   }>
 }
 ```
 
-Current limitation: `rows[].ingredient` may contain the synthetic `General method` row. Issue #5 tracks separating synthetic method rows from real ingredient rows.
+Synthetic method content is represented with `type: 'method'` and `label: 'Method lane'`; it must not be counted as a source ingredient.
 
 ## Implemented Functions
 
@@ -166,7 +173,10 @@ classDiagram
 - `buildTrnModel(recipe)` turns an `ExtractedRecipe` into rows, phases, and cells.
 - If `instructionSections` exists, phases are derived from source `HowToSection` names.
 - If no structured sections exist, the fallback phases are `Prep`, `Cook`, and `Finish`.
-- Unmatched structured steps currently go to a synthetic `General method` row.
+- Real ingredients use rows with `type: 'ingredient'`.
+- Unmatched/general method steps use a visually distinct `type: 'method'` row labeled `Method lane`.
+- Cells contain compact action labels plus source step text/number/confidence for traceability.
+- The builder applies conservative ingredient/action matching to avoid known false positives like kosher salt vs flaky sea salt and panko vs oil-spray steps.
 
 ### Rendering
 
@@ -215,6 +225,9 @@ npm run check
 - Dining with Skyler reader fallback extraction,
 - schema.org `Recipe` JSON-LD extraction,
 - section-aware TRN phase generation,
+- row typing for real ingredients vs method lane,
+- compact TRN cell labels with source text retained,
+- known false-positive mapping cases from issue #5,
 - no-markup detection,
 - pipeline output shape,
 - metadata timeout fallback.
@@ -226,7 +239,7 @@ npm run check
 - Static deployment depends on public proxy services for cross-origin recipe access.
 - Only schema.org `Recipe` JSON-LD is treated as a standardized markup source today.
 - Reader markdown fallback is heuristic and can be incomplete.
-- Ingredient/action relationship mapping is approximate; issue #5 tracks notation cleanup, method-row separation, and false-positive matching.
+- Ingredient/action relationship mapping remains heuristic for natural-language instructions; issue #5's first cleanup separates method rows and reduces known false positives, but a future parser should expose ambiguity more explicitly.
 - There is no persistent storage or backend scraper.
 
 ## Architecture Alignment Rule
