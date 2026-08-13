@@ -93,20 +93,21 @@ These are lightweight JavaScript object contracts, not TypeScript types.
 {
   phases: string[],
   rows: Array<{
-    type: 'ingredient' | 'method',
+    type: 'ingredient',
     label: string,
     ingredient: string,
-    cells: Record<string, Array<{
-      label: string,
-      sourceText: string,
-      stepNumber: number,
-      confidence: 'direct' | 'method' | 'ambiguous'
-    }>>
+    cells: Record<string, []>
+  }>,
+  procedure: Array<{
+    type: 'procedure',
+    section: string,
+    stepNumber: number,
+    text: string
   }>
 }
 ```
 
-Synthetic method content is represented with `type: 'method'` and `label: 'Method lane'`; it must not be counted as a source ingredient.
+The deterministic translator preserves the markup-backed ingredient inventory and procedure separately. It does not invent ingredient/action relationships that are not present in the source markup.
 
 ## Implemented Functions
 
@@ -170,17 +171,18 @@ classDiagram
 
 ### TRN building
 
-- `buildTrnModel(recipe)` turns an `ExtractedRecipe` into rows, phases, and cells.
+- `buildTrnModel(recipe)` turns an `ExtractedRecipe` into phases, ingredient inventory rows, and ordered procedure units.
 - If `instructionSections` exists, phases are derived from source `HowToSection` names.
-- If no structured sections exist, the fallback phases are `Prep`, `Cook`, and `Finish`.
-- Real ingredients use rows with `type: 'ingredient'`.
-- Unmatched/general method steps use a visually distinct `type: 'method'` row labeled `Method lane`.
-- Cells contain compact action labels plus source step text/number/confidence for traceability.
-- The builder applies conservative ingredient/action matching to avoid known false positives like kosher salt vs flaky sea salt and panko vs oil-spray steps.
+- If no structured sections exist, the fallback phases are `Prep`, `Cook`, and `Finish` for reader text or `Procedure` for flat schema instructions.
+- `recipeIngredient[]` is translated directly to `type: 'ingredient'` rows.
+- `recipeInstructions` / `HowToStep` values are translated directly to `type: 'procedure'` units.
+- The core translator does not assign procedure steps to ingredient cells unless the source markup provides that relationship; schema.org prose steps remain procedure units.
 
 ### Rendering
 
 - `renderTrnSvg(recipe)` builds a `TrnModel` and renders it as inline SVG.
+- The SVG has separate regions for ingredient inventory and ordered procedure.
+- Procedure rows include the source section name and source instruction text; they do not show inferred compact action labels.
 - The browser stores the SVG for download.
 
 ## Form Submit Sequence
@@ -225,9 +227,9 @@ npm run check
 - Dining with Skyler reader fallback extraction,
 - schema.org `Recipe` JSON-LD extraction,
 - section-aware TRN phase generation,
-- row typing for real ingredients vs method lane,
-- compact TRN cell labels with source text retained,
-- known false-positive mapping cases from issue #5,
+- deterministic schema.org Recipe-to-TRN translation without ingredient/action guessing,
+- row typing for real ingredient inventory,
+- ordered procedure units preserving markup section and step text,
 - no-markup detection,
 - pipeline output shape,
 - metadata timeout fallback.
@@ -239,7 +241,7 @@ npm run check
 - Static deployment depends on public proxy services for cross-origin recipe access.
 - Only schema.org `Recipe` JSON-LD is treated as a standardized markup source today.
 - Reader markdown fallback is heuristic and can be incomplete.
-- Ingredient/action relationship mapping remains heuristic for natural-language instructions; issue #5's first cleanup separates method rows and reduces known false positives, but a future parser should expose ambiguity more explicitly.
+- The core translator intentionally avoids ingredient/action inference; richer ingredient-step relationships require a future markup extension or an explicit non-default assistance layer.
 - There is no persistent storage or backend scraper.
 
 ## Architecture Alignment Rule

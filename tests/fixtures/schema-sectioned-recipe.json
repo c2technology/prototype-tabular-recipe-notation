@@ -1,0 +1,28 @@
+{
+  "@type": "Recipe",
+  "name": "Sectioned Test Soup",
+  "recipeYield": "4 servings",
+  "recipeIngredient": [
+    "1 cup lentils",
+    "2 cups vegetable broth",
+    "1 carrot, diced"
+  ],
+  "recipeInstructions": [
+    {
+      "@type": "HowToSection",
+      "name": "Prep",
+      "itemListElement": [
+        { "@type": "HowToStep", "text": "Rinse the lentils." },
+        { "@type": "HowToStep", "text": "Dice the carrot." }
+      ]
+    },
+    {
+      "@type": "HowToSection",
+      "name": "Cook",
+      "itemListElement": [
+        { "@type": "HowToStep", "text": "Combine lentils, broth, and carrot in a pot." },
+        { "@type": "HowToStep", "text": "Simmer until tender." }
+      ]
+    }
+  ]
+}

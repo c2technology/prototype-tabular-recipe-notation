@@ -876,92 +876,26 @@ Servings: 4
       .replace(/^./, (char) => char.toUpperCase());
   }
 
-  function ingredientTokens(ingredient) {
-    const withoutParentheticals = String(ingredient || "").toLowerCase().replace(/\([^)]*\)/g, " ");
-    const raw = withoutParentheticals
-      .replace(/[^a-z\s-]/g, " ")
-      .split(/\s+/)
-      .filter((word) => word.length > 2 && !STOP_WORDS.has(word));
-    const tokens = new Set(raw);
-    if (raw.includes("chicken") || raw.includes("turkey")) tokens.add("meat");
-    if (raw.includes("panko") || raw.includes("breadcrumbs")) tokens.add("breadcrumbs");
-    if (raw.includes("eggs") || raw.includes("egg")) tokens.add("egg");
-    if (raw.includes("flour")) tokens.add("flour");
-    if (raw.includes("oil")) tokens.add("oil");
-    return [...tokens];
-  }
-
-  function makeCell(label, sourceText, index, confidence = "direct") {
-    return { label, sourceText, stepNumber: index + 1, confidence };
-  }
-
-  function compactActionLabel(text) {
-    const lower = text.toLowerCase();
-    if (/mix .*salt.*garlic powder.*onion powder/.test(lower)) return "mix seasoning";
-    if (/let it sit/.test(lower)) return "rest briefly";
-    if (/sprinkle .*flour|flour over/.test(lower)) return "flour surface";
-    if (/press into|large oval|pounded chicken/.test(lower)) return "shape cutlet";
-    if (/brush .*egg|egg wash/.test(lower)) return "brush egg";
-    if (/spray|brush .*oil|avocado oil/.test(lower)) return "spray oil";
-    if (/panko|breadcrumbs/.test(lower)) return "coat panko";
-    if (/parchment|transfer|sheet pan/.test(lower)) return "transfer";
-    if (/bake/.test(lower)) return "bake";
-    if (/broil/.test(lower)) return "broil";
-    if (/flaky sea salt|sprinkle .*sea salt/.test(lower)) return "finish salt";
-    if (/rest/.test(lower)) return "rest";
-    if (/slice/.test(lower)) return "slice";
-    return lower.split(/\s+/).slice(0, 3).join(" ").slice(0, 24);
-  }
-
-  function targetsForStep(rows, stepText) {
-    const lower = stepText.toLowerCase();
-    if (/flaky sea salt|sprinkle .*sea salt/.test(lower)) {
-      return rows.filter((row) => /flaky sea salt/i.test(row.label));
-    }
-    if (/mix .*salt.*garlic powder.*onion powder/.test(lower)) {
-      return rows.filter((row) => /ground chicken|ground turkey|kosher salt|garlic powder|onion powder/i.test(row.label));
-    }
-    if (/egg wash|brush .*egg/.test(lower)) return rows.filter((row) => /egg/i.test(row.label));
-    if (/avocado oil|spray|brush .*oil/.test(lower)) return rows.filter((row) => /avocado oil/i.test(row.label));
-    if (/panko|breadcrumbs/.test(lower)) return rows.filter((row) => /panko|breadcrumbs/i.test(row.label));
-    if (/flour/.test(lower)) return rows.filter((row) => /flour/i.test(row.label));
-    if (/meat|cutlet|chicken|turkey/.test(lower) && !/parchment|sheet pan|transfer/.test(lower)) {
-      return rows.filter((row) => /ground chicken|ground turkey/i.test(row.label));
-    }
-    return [];
-  }
-
   function buildSchemaTrnModel(recipe) {
-    const phases = recipe.instructionSections
-      .map((step) => normalizePhaseName(step.section))
-      .filter((phase, index, all) => phase && all.indexOf(phase) === index);
+    const sections = recipe.instructionSections || [];
+    const phases = sections.length
+      ? sections
+          .map((step) => normalizePhaseName(step.section || "Procedure"))
+          .filter((phase, index, all) => phase && all.indexOf(phase) === index)
+      : ["Procedure"];
     const rows = recipe.ingredients.map((ingredient) => ({
       type: "ingredient",
       label: ingredient,
       ingredient,
-      tokens: ingredientTokens(ingredient),
       cells: Object.fromEntries(phases.map((phase) => [phase, []])),
     }));
-    const methodRow = {
-      type: "method",
-      label: "Method lane",
-      ingredient: "Method lane",
-      tokens: [],
-      cells: Object.fromEntries(phases.map((phase) => [phase, []])),
-    };
-
-    recipe.instructionSections.forEach((step, index) => {
-      const phase = normalizePhaseName(step.section);
-      const text = step.text;
-      const targets = targetsForStep(rows, text);
-      (targets.length ? targets : [methodRow]).forEach((row) => row.cells[phase].push(makeCell(compactActionLabel(text), text, index, targets.length ? "direct" : "method")));
-    });
-
-    const activeIngredientRows = rows.filter((row) => Object.values(row.cells).some((cell) => cell.length));
-    const inactiveIngredientRows = rows.filter((row) => !Object.values(row.cells).some((cell) => cell.length));
-    const allRows = [...activeIngredientRows, ...inactiveIngredientRows];
-    if (Object.values(methodRow.cells).some((cell) => cell.length)) allRows.push(methodRow);
-    return { phases, rows: allRows };
+    const procedure = (sections.length ? sections : recipe.steps.map((text) => ({ text, section: "Procedure" }))).map((step, index) => ({
+      type: "procedure",
+      section: normalizePhaseName(step.section || "Procedure"),
+      stepNumber: index + 1,
+      text: step.text,
+    }));
+    return { phases, rows, procedure };
   }
 
   function buildTrnModel(recipe) {
@@ -969,26 +903,20 @@ Servings: 4
 
     const ingredients = recipe.ingredients.length ? recipe.ingredients : ["Ingredient list not found"];
     const steps = recipe.steps.length ? recipe.steps : ["Instruction steps not found"];
+    const phases = PHASES;
     const rows = ingredients.slice(0, 12).map((ingredient) => ({
       type: "ingredient",
       label: ingredient,
       ingredient,
-      key: ingredientKey(ingredient),
-      cells: { Prep: [], Cook: [], Finish: [] },
+      cells: Object.fromEntries(phases.map((phase) => [phase, []])),
     }));
-    const methodRow = { type: "method", label: "Method lane", ingredient: "Method lane", key: "", cells: { Prep: [], Cook: [], Finish: [] } };
-
-    steps.forEach((step, index) => {
-      const phase = classifyPhase(step, index, steps.length);
-      const lower = step.toLowerCase();
-      const matches = rows.filter((row) => row.key && lower.includes(row.key));
-      const targets = matches.length ? matches : [methodRow];
-      targets.forEach((row) => row.cells[phase].push(makeCell(compactActionLabel(step), step, index, matches.length ? "direct" : "method")));
-    });
-
-    const activeRows = rows.filter((row) => Object.values(row.cells).some((cell) => cell.length));
-    if (Object.values(methodRow.cells).some((cell) => cell.length)) activeRows.push(methodRow);
-    return { phases: PHASES, rows: activeRows.length ? activeRows : rows };
+    const procedure = steps.map((text, index) => ({
+      type: "procedure",
+      section: classifyPhase(text, index, steps.length),
+      stepNumber: index + 1,
+      text,
+    }));
+    return { phases, rows, procedure };
   }
 
   function escapeXml(value) {
@@ -1026,44 +954,39 @@ Servings: 4
 
   function renderTrnSvg(recipe) {
     const model = buildTrnModel(recipe);
-    const rowHeight = 104;
+    const rowHeight = 72;
+    const procedureRowHeight = 72;
     const headerHeight = 128;
-    const ingredientWidth = 210;
-    const phaseWidth = 210;
-    const width = ingredientWidth + phaseWidth * model.phases.length + 48;
-    const height = headerHeight + rowHeight * model.rows.length + 36;
-    const colors = { Prep: "#edf4dc", Cook: "#f6dfb7", Finish: "#f7d6c4" };
+    const ingredientWidth = 260;
+    const procedureWidth = 640;
+    const width = ingredientWidth + procedureWidth + 48;
+    const procedureHeight = Math.max(procedureRowHeight, procedureRowHeight * (model.procedure?.length || 1));
+    const height = headerHeight + 36 + rowHeight * model.rows.length + 52 + procedureHeight + 36;
 
     let svg = `<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc" viewBox="0 0 ${width} ${height}">`;
     svg += `<title id="title">${escapeXml(recipe.title)} as Tabular Recipe Notation</title>`;
-    svg += `<desc id="desc">A table with ingredients as rows and cooking phases as columns.</desc>`;
+    svg += `<desc id="desc">A deterministic translation of recipe markup with ingredient inventory and ordered procedure.</desc>`;
     svg += `<rect width="100%" height="100%" rx="24" fill="#fffdf8"/>`;
     svg += textBlock(recipe.title, 24, 34, width - 48, { size: 24, weight: 800 });
     svg += textBlock(`Source: ${recipe.sourceUrl}`, 24, 72, width - 48, { size: 12, fill: "#6a665f" });
     svg += textBlock(`Prep ${recipe.prep} · Cook ${recipe.cook} · Total ${recipe.total} · Servings ${recipe.servings}`, 24, 94, width - 48, { size: 13, weight: 700, fill: "#9f3d20" });
 
-    const tableY = headerHeight;
-    svg += `<rect x="24" y="${tableY - 32}" width="${ingredientWidth}" height="32" fill="#263238" rx="8"/>`;
-    svg += `<text x="40" y="${tableY - 11}" font-size="14" font-weight="800" fill="white">Ingredient</text>`;
-    model.phases.forEach((phase, phaseIndex) => {
-      const x = 24 + ingredientWidth + phaseIndex * phaseWidth;
-      svg += `<rect x="${x}" y="${tableY - 32}" width="${phaseWidth}" height="32" fill="#263238" rx="8"/>`;
-      svg += `<text x="${x + 16}" y="${tableY - 11}" font-size="14" font-weight="800" fill="white">${phase}</text>`;
+    const inventoryY = headerHeight;
+    svg += `<rect x="24" y="${inventoryY - 32}" width="${ingredientWidth}" height="32" fill="#263238" rx="8"/>`;
+    svg += `<text x="40" y="${inventoryY - 11}" font-size="14" font-weight="800" fill="white">Ingredient inventory</text>`;
+    model.rows.forEach((row, rowIndex) => {
+      const y = inventoryY + rowIndex * rowHeight;
+      svg += `<rect x="24" y="${y}" width="${ingredientWidth}" height="${rowHeight}" fill="${rowIndex % 2 === 0 ? "#edf4dc" : "#f7fbef"}" stroke="#ded5c4"/>`;
+      svg += textBlock(row.label || row.ingredient, 40, y + 25, ingredientWidth - 28, { size: 13, weight: 750 });
     });
 
-    model.rows.forEach((row, rowIndex) => {
-      const y = tableY + rowIndex * rowHeight;
-      const fill = rowIndex % 2 === 0 ? "#fff8ea" : "#ffffff";
-      svg += `<rect x="24" y="${y}" width="${ingredientWidth}" height="${rowHeight}" fill="${row.type === "method" ? "#e9edf5" : "#edf4dc"}" stroke="#ded5c4"/>`;
-      svg += textBlock(row.label || row.ingredient, 40, y + 26, ingredientWidth - 28, { size: 13, weight: row.type === "method" ? 850 : 750, fill: row.type === "method" ? "#35415c" : "#20201d" });
-      model.phases.forEach((phase, phaseIndex) => {
-        const x = 24 + ingredientWidth + phaseIndex * phaseWidth;
-        svg += `<rect x="${x}" y="${y}" width="${phaseWidth}" height="${rowHeight}" fill="${row.cells[phase].length ? colors[phase] : fill}" stroke="#ded5c4"/>`;
-        const cellText = row.cells[phase].map((cell) => `${cell.stepNumber}. ${cell.label}`).join(" • ");
-        svg += cellText
-          ? textBlock(cellText, x + 12, y + 24, phaseWidth - 22, { size: 11, weight: 600 })
-          : `<text x="${x + 12}" y="${y + 24}" font-size="11" fill="#b2aa9f">—</text>`;
-      });
+    const procedureY = inventoryY + rowHeight * model.rows.length + 52;
+    svg += `<rect x="24" y="${procedureY - 32}" width="${procedureWidth}" height="32" fill="#263238" rx="8"/>`;
+    svg += `<text x="40" y="${procedureY - 11}" font-size="14" font-weight="800" fill="white">Procedure</text>`;
+    (model.procedure || []).forEach((unit, index) => {
+      const y = procedureY + index * procedureRowHeight;
+      svg += `<rect x="24" y="${y}" width="${procedureWidth}" height="${procedureRowHeight}" fill="${index % 2 === 0 ? "#fff8ea" : "#ffffff"}" stroke="#ded5c4"/>`;
+      svg += textBlock(`${unit.stepNumber}. [${unit.section}] ${unit.text}`, 40, y + 24, procedureWidth - 28, { size: 12, weight: 600 });
     });
     svg += `</svg>`;
     return svg;

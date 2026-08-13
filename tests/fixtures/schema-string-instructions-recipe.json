@@ -1,0 +1,15 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Recipe",
+  "name": "String Instruction Salad",
+  "recipeYield": "2 servings",
+  "recipeIngredient": [
+    "1 cucumber",
+    "2 tomatoes",
+    "1 tablespoon vinegar"
+  ],
+  "recipeInstructions": [
+    "Slice the cucumber and tomatoes.",
+    "Toss vegetables with vinegar."
+  ]
+}
