@@ -1,0 +1,96 @@
+{
+  "title": "Toll House Chocolate Chip Cookies",
+  "finalDish": "Cookies",
+  "sourceNote": "Hand-authored TRN fixture based on the well-known Toll House chocolate chip cookie recipe structure.",
+  "superfluousProse": "These cookies are perfect for parties, lunchboxes, bake sales, and cozy weekends. This prose must not appear in TRN output.",
+  "rows": [
+    { "id": "flour", "label": "2 1/4 cups flour" },
+    { "id": "baking-soda", "label": "1 tsp baking soda" },
+    { "id": "salt", "label": "1 tsp salt" },
+    { "id": "butter", "label": "1 cup butter" },
+    { "id": "granulated-sugar", "label": "3/4 cup granulated sugar" },
+    { "id": "brown-sugar", "label": "3/4 cup brown sugar" },
+    { "id": "vanilla", "label": "1 tsp vanilla" },
+    { "id": "eggs", "label": "2 large eggs" },
+    { "id": "morsels", "label": "2 cups chocolate morsels" },
+    { "id": "nuts", "label": "1 cup chopped nuts" }
+  ],
+  "columns": [
+    { "id": "combine-dry", "label": "combine dry" },
+    { "id": "cream", "label": "cream" },
+    { "id": "add-eggs", "label": "add eggs" },
+    { "id": "add-dry", "label": "add dry" },
+    { "id": "stir-in", "label": "stir in" },
+    { "id": "drop", "label": "drop dough" },
+    { "id": "bake", "label": "bake 375°F 9–11 min" }
+  ],
+  "spans": [
+    {
+      "id": "dry-mixture",
+      "label": "dry mix",
+      "rows": ["flour", "baking-soda", "salt"],
+      "fromColumn": "combine-dry",
+      "toColumn": "add-dry"
+    },
+    {
+      "id": "creamed-mixture",
+      "label": "creamed",
+      "rows": ["butter", "granulated-sugar", "brown-sugar", "vanilla", "eggs"],
+      "fromColumn": "cream",
+      "toColumn": "add-dry"
+    },
+    {
+      "id": "cookie-dough",
+      "label": "dough",
+      "rows": ["flour", "baking-soda", "salt", "butter", "granulated-sugar", "brown-sugar", "vanilla", "eggs", "morsels", "nuts"],
+      "fromColumn": "add-dry",
+      "toColumn": "bake"
+    }
+  ],
+  "marks": [
+    { "row": "flour", "column": "combine-dry" },
+    { "row": "baking-soda", "column": "combine-dry" },
+    { "row": "salt", "column": "combine-dry" },
+
+    { "row": "butter", "column": "cream" },
+    { "row": "granulated-sugar", "column": "cream" },
+    { "row": "brown-sugar", "column": "cream" },
+    { "row": "vanilla", "column": "cream" },
+
+    { "row": "eggs", "column": "add-eggs" },
+
+    { "row": "flour", "column": "add-dry" },
+    { "row": "baking-soda", "column": "add-dry" },
+    { "row": "salt", "column": "add-dry" },
+    { "row": "butter", "column": "add-dry" },
+    { "row": "granulated-sugar", "column": "add-dry" },
+    { "row": "brown-sugar", "column": "add-dry" },
+    { "row": "vanilla", "column": "add-dry" },
+    { "row": "eggs", "column": "add-dry" },
+
+    { "row": "morsels", "column": "stir-in" },
+    { "row": "nuts", "column": "stir-in" },
+
+    { "row": "flour", "column": "drop" },
+    { "row": "baking-soda", "column": "drop" },
+    { "row": "salt", "column": "drop" },
+    { "row": "butter", "column": "drop" },
+    { "row": "granulated-sugar", "column": "drop" },
+    { "row": "brown-sugar", "column": "drop" },
+    { "row": "vanilla", "column": "drop" },
+    { "row": "eggs", "column": "drop" },
+    { "row": "morsels", "column": "drop" },
+    { "row": "nuts", "column": "drop" },
+
+    { "row": "flour", "column": "bake" },
+    { "row": "baking-soda", "column": "bake" },
+    { "row": "salt", "column": "bake" },
+    { "row": "butter", "column": "bake" },
+    { "row": "granulated-sugar", "column": "bake" },
+    { "row": "brown-sugar", "column": "bake" },
+    { "row": "vanilla", "column": "bake" },
+    { "row": "eggs", "column": "bake" },
+    { "row": "morsels", "column": "bake" },
+    { "row": "nuts", "column": "bake" }
+  ]
+}

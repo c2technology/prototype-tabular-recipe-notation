@@ -24,10 +24,12 @@ Live app: <https://c2technology.github.io/prototype-tabular-recipe-notation/>
 ```bash
 npm run check
 npm run render:trn-fixture
+npm run render:trn-tollhouse
 npm run serve
 ```
 
 `npm run render:trn-fixture` writes a local PNG review artifact to `artifacts/fudgy-brownies-trn.png`.
+`npm run render:trn-tollhouse` writes a local PNG review artifact to `artifacts/toll-house-cookie-trn.png`.
 
 Open <http://127.0.0.1:4173/>.
 

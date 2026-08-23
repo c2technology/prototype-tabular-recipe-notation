@@ -128,7 +128,6 @@ function renderTrnSvg(fixture) {
     const w = (lastColumn - firstColumn + 1) * actionWidth - 16;
     const h = (lastRow - firstRow + 1) * rowHeight - 16;
     svg += `<rect data-kind="combination-span" data-span="${escapeXml(span.id || span.label)}" x="${x}" y="${y}" width="${w}" height="${h}" rx="14" fill="none" stroke="#8f6f35" stroke-width="2" stroke-dasharray="6 5"/>`;
-    if (span.label) svg += textBlock(span.label, x + w - 10, y + 19, 12, { size: 12, weight: 700, fill: '#8f6f35', anchor: 'end' });
   }
 
   fixture.rows.forEach((row, rowIndex) => {

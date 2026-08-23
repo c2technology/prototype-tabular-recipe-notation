@@ -103,16 +103,17 @@ The first working application command is:
 npm run render:trn-fixture
 ```
 
-It renders:
+It renders hand-authored fixtures such as:
 
 ```text
 tests/fixtures/hand-authored-trn-matrix.json
+tests/fixtures/toll-house-cookie-trn-matrix.json
 ```
 
-into:
+into local PNG artifacts under:
 
 ```text
-artifacts/fudgy-brownies-trn.png
+artifacts/
 ```
 
 Generated PNG files are local review artifacts and are not committed.
