@@ -2,12 +2,16 @@
 
 A static GitHub Pages prototype that accepts a recipe URL and renders the recipe as a **Tabular Recipe Notation (TRN)** graphic.
 
-TRN in this prototype means:
+TRN target format for the new PNG generator means:
 
 - ingredients are rows,
-- phases (`Prep`, `Cook`, `Finish`) are columns,
-- recipe steps are placed into table cells,
-- the output is an inline SVG graphic that can be downloaded.
+- actions/operations are columns moving left-to-right,
+- participation marks show which ingredients are used in each action,
+- the finished dish appears at the far right,
+- superfluous recipe prose is removed,
+- the output is a PNG review artifact.
+
+The current browser MVP still renders SVG from recipe URLs. Issue #11 adds the first standalone TRN PNG renderer for a hand-authored matrix fixture.
 
 ## Current Status
 
@@ -19,8 +23,11 @@ Live app: <https://c2technology.github.io/prototype-tabular-recipe-notation/>
 
 ```bash
 npm run check
+npm run render:trn-fixture
 npm run serve
 ```
+
+`npm run render:trn-fixture` writes a local PNG review artifact to `artifacts/fudgy-brownies-trn.png`.
 
 Open <http://127.0.0.1:4173/>.
 
@@ -51,8 +58,10 @@ Browser verification should confirm:
 
 - `index.html` — static page shell.
 - `styles.css` — responsive app styling and TRN presentation.
-- `src/app.js` — URL reader, parser, TRN model, SVG renderer, UI wiring.
-- `tests/` — lightweight no-dependency checks.
+- `src/app.js` — URL reader, parser, legacy TRN model, SVG renderer, UI wiring.
+- `src/trn-png-renderer.js` — hand-authored TRN matrix fixture to SVG/PNG renderer.
+- `tests/` — lightweight no-dependency checks and fixtures.
+- `docs/architecture.md` — current architecture and renderer contracts.
 - `MEMORY.md` — durable project facts and decisions.
 - `docs/handoff.md` — current state and next steps.
 - `docs/findings/` — future extraction findings.

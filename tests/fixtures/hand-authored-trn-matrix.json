@@ -1,0 +1,62 @@
+{
+  "title": "Fudgy Brownies",
+  "finalDish": "Brownies",
+  "superfluousProse": "This paragraph mimics recipe blog prose and must not appear in TRN output.",
+  "rows": [
+    { "id": "butter", "label": "4 oz unsalted butter" },
+    { "id": "sugar", "label": "1 cup sugar" },
+    { "id": "vanilla", "label": "1/4 tsp vanilla" },
+    { "id": "espresso", "label": "1 shot espresso" },
+    { "id": "eggs", "label": "2 large eggs" },
+    { "id": "flour", "label": "1/2 cup flour" },
+    { "id": "cocoa", "label": "1/3 cup cocoa" },
+    { "id": "baking-soda", "label": "1/4 tsp baking soda" },
+    { "id": "salt", "label": "1/4 tsp salt" }
+  ],
+  "columns": [
+    { "id": "melt", "label": "melt" },
+    { "id": "mix-wet", "label": "mix" },
+    { "id": "mix-dry", "label": "mix" },
+    { "id": "fold", "label": "fold in" },
+    { "id": "bake", "label": "bake 350°F 30–40 min" }
+  ],
+  "spans": [
+    {
+      "id": "batter",
+      "label": "batter",
+      "rows": ["butter", "sugar", "vanilla", "espresso", "eggs", "flour", "cocoa", "baking-soda", "salt"],
+      "fromColumn": "fold",
+      "toColumn": "bake"
+    }
+  ],
+  "marks": [
+    { "row": "butter", "column": "melt" },
+    { "row": "butter", "column": "mix-wet" },
+    { "row": "sugar", "column": "mix-wet" },
+    { "row": "vanilla", "column": "mix-wet" },
+    { "row": "espresso", "column": "mix-wet" },
+    { "row": "eggs", "column": "mix-wet" },
+    { "row": "flour", "column": "mix-dry" },
+    { "row": "cocoa", "column": "mix-dry" },
+    { "row": "baking-soda", "column": "mix-dry" },
+    { "row": "salt", "column": "mix-dry" },
+    { "row": "butter", "column": "fold" },
+    { "row": "sugar", "column": "fold" },
+    { "row": "vanilla", "column": "fold" },
+    { "row": "espresso", "column": "fold" },
+    { "row": "eggs", "column": "fold" },
+    { "row": "flour", "column": "fold" },
+    { "row": "cocoa", "column": "fold" },
+    { "row": "baking-soda", "column": "fold" },
+    { "row": "salt", "column": "fold" },
+    { "row": "butter", "column": "bake" },
+    { "row": "sugar", "column": "bake" },
+    { "row": "vanilla", "column": "bake" },
+    { "row": "espresso", "column": "bake" },
+    { "row": "eggs", "column": "bake" },
+    { "row": "flour", "column": "bake" },
+    { "row": "cocoa", "column": "bake" },
+    { "row": "baking-soda", "column": "bake" },
+    { "row": "salt", "column": "bake" }
+  ]
+}

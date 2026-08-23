@@ -4,7 +4,8 @@
   "private": true,
   "description": "Static GitHub Pages prototype for rendering recipe URLs as Tabular Recipe Notation graphics.",
   "scripts": {
-    "check": "node --check src/app.js && node tests/app.test.js && python3 tests/check_html.py",
+    "check": "node --check src/app.js && node --check src/trn-png-renderer.js && node tests/app.test.js && node tests/trn_png_renderer.test.js && python3 tests/check_html.py && python3 tests/check_fixtures.py",
+    "render:trn-fixture": "node src/trn-png-renderer.js tests/fixtures/hand-authored-trn-matrix.json artifacts/fudgy-brownies-trn.png",
     "serve": "python3 -m http.server 4173 --bind 127.0.0.1"
   },
   "keywords": [
