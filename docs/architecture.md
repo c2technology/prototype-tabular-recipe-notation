@@ -124,13 +124,14 @@ Generated PNG files are local review artifacts and are not committed.
 
 - JavaScript syntax checks,
 - existing app behavior tests,
-- TRN PNG renderer BDD tests,
-- formal Gherkin behavior text under `tests/features/`,
+- TRN PNG renderer unit/edge-case tests,
+- executable Cucumber/Gherkin behavior tests under `tests/features/`,
 - HTML sanity checks,
 - JSON fixture sanity checks.
 
 Issue #11's renderer tests verify:
 
+- executable Gherkin scenarios bind to step definitions and render both fixture PNGs,
 - a fixture can define ingredient rows, action columns, marks, and final dish label,
 - rendered SVG contains ingredient rows,
 - rendered SVG contains action columns,

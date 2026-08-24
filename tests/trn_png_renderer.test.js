@@ -47,13 +47,6 @@ for (const fixtureFile of fixtureFiles) {
   assert.ok(bytes.length > 10_000, `expected non-trivial PNG for ${fixtureFile}, got ${bytes.length} bytes`);
 }
 
-const featureText = fs.readFileSync(path.join(__dirname, 'features', 'trn_png_renderer.feature'), 'utf8');
-assert.match(featureText, /Feature: Render hand-authored TRN matrix fixture as PNG/);
-assert.match(featureText, /Scenario: Render a TRN matrix as PNG/);
-assert.match(featureText, /Given a hand-authored TRN matrix fixture/);
-assert.match(featureText, /When the PNG generator renders the fixture/);
-assert.match(featureText, /Then a PNG file is created/);
-
 const invalidCases = [
   [null, /TRN fixture must be an object/],
   [{ title: 'Invalid' }, /TRN fixture missing finalDish/],
