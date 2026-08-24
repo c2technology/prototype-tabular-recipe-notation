@@ -4,7 +4,7 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 
 function escapeXml(value) {
-  return String(value ?? '')
+  return String(value)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -13,7 +13,7 @@ function escapeXml(value) {
 }
 
 function wrapText(text, maxChars) {
-  const words = String(text ?? '').split(/\s+/).filter(Boolean);
+  const words = String(text).split(/\s+/).filter(Boolean);
   const lines = [];
   let line = '';
   for (const word of words) {
@@ -26,14 +26,13 @@ function wrapText(text, maxChars) {
     }
   }
   if (line) lines.push(line);
-  return lines.length ? lines : [''];
+  return lines;
 }
 
 function textBlock(text, x, y, maxChars, options = {}) {
-  const { size = 14, weight = 400, fill = '#1f2933', lineHeight = Math.round(size * 1.25), anchor = 'start', className = '' } = options;
+  const { size = 14, weight = 400, fill = '#1f2933', lineHeight = Math.round(size * 1.25), anchor = 'start' } = options;
   const lines = wrapText(text, maxChars);
   const attrs = [`font-size="${size}"`, `font-weight="${weight}"`, `fill="${fill}"`, `text-anchor="${anchor}"`];
-  if (className) attrs.push(`class="${escapeXml(className)}"`);
   return `<text x="${x}" y="${y}" ${attrs.join(' ')}>${lines
     .map((line, index) => `<tspan x="${x}" dy="${index === 0 ? 0 : lineHeight}">${escapeXml(line)}</tspan>`)
     .join('')}</text>`;
@@ -164,9 +163,7 @@ function renderTrnPngFile(fixture, outputPath) {
   fs.mkdirSync(path.dirname(out), { recursive: true });
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'trn-svg-'));
   const htmlPath = path.join(tempDir, 'diagram.html');
-  const viewBoxMatch = svg.match(/viewBox="0 0 (\d+) (\d+)"/);
-  const width = viewBoxMatch ? viewBoxMatch[1] : '1200';
-  const height = viewBoxMatch ? viewBoxMatch[2] : '800';
+  const [, width, height] = svg.match(/viewBox="0 0 (\d+) (\d+)"/);
   const html = `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;width:${width}px;height:${height}px;overflow:hidden;background:#fbfaf7;}svg{display:block;width:${width}px;height:${height}px;}</style></head><body>${svg}</body></html>`;
   fs.writeFileSync(htmlPath, html);
   const chromium = findChromium();

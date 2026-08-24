@@ -90,8 +90,8 @@ The SVG includes `data-kind` attributes used by tests:
 ### `renderTrnPngFile(fixture, outputPath)`
 
 - calls `renderTrnSvg(fixture)`,
-- writes a temporary SVG,
-- uses headless Chromium to screenshot the SVG into a PNG,
+- embeds the SVG in a temporary HTML document sized to the SVG viewbox,
+- uses headless Chromium to screenshot the HTML/SVG into a PNG,
 - writes the PNG to `outputPath`,
 - returns the resolved output path.
 
@@ -125,6 +125,7 @@ Generated PNG files are local review artifacts and are not committed.
 - JavaScript syntax checks,
 - existing app behavior tests,
 - TRN PNG renderer BDD tests,
+- formal Gherkin behavior text under `tests/features/`,
 - HTML sanity checks,
 - JSON fixture sanity checks.
 
@@ -135,7 +136,11 @@ Issue #11's renderer tests verify:
 - rendered SVG contains action columns,
 - rendered SVG contains participation marks,
 - superfluous prose is absent from renderer output,
-- PNG file generation produces a valid PNG with non-trivial size.
+- PNG file generation produces a valid PNG with non-trivial size,
+- validation rejects malformed fixture references,
+- CLI success and usage-error paths are covered.
+
+`npm run coverage:trn-renderer` measures coverage for `src/trn-png-renderer.js`.
 
 ## Known limitations
 
