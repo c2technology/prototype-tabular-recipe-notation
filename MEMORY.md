@@ -6,6 +6,7 @@
 - The MVP is a backend-free static GitHub Pages app.
 - Recipe URLs are fetched through the public `r.jina.ai` reader service to work around browser CORS limits on arbitrary recipe sites.
 - Current implementation is schema-first: it tries embedded schema.org `Recipe` JSON-LD before falling back to reader-service markdown heuristics.
+- `docs/architecture.md` is the current architecture source and must be updated in the same commit as architecture-affecting code changes.
 
 ## Decisions
 
