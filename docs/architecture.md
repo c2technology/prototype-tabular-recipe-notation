@@ -9,6 +9,10 @@ The repository currently contains two working slices:
 1. **Browser MVP** — a static GitHub Pages-compatible browser application in `src/app.js`. A user enters a recipe URL, the app ingests recipe sources through public CORS-friendly services, detects supported recipe markup, extracts recipe data, builds a browser TRN model, and renders inline SVG.
 2. **Issue #11 PNG renderer** — a standalone fixture renderer in `src/trn-png-renderer.js`. It renders hand-authored TRN matrix fixtures to PNG so the team can validate the visual notation before adding recipe parsing/translation to the PNG generator.
 
+## Technology alignment note
+
+PR #16 / issue #11 is implemented in JavaScript with headless Chromium because it began before the Product Owner decision to standardize future backend rendering on Python Lambda/Pillow. That is acceptable for this first visual-slice PR, but it is not the long-term renderer implementation. Issue #17 is the approved next iteration and will port the same fixture contract and behavior to Python/Pillow so the canonical renderer can run locally and in AWS Lambda.
+
 ## Product direction
 
 TRN is a grid-style recipe notation inspired by the Recipe Grid reference at <https://toddschiller.com/artifacts/recipe-grid/#p=brownies>.

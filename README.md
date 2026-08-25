@@ -13,6 +13,8 @@ TRN target format for the new PNG generator means:
 
 The current browser MVP still renders SVG from recipe URLs. Issue #11 adds the first standalone TRN PNG renderer for hand-authored matrix fixtures while preserving the existing browser app.
 
+Technology note: issue #11/PR #16 uses JavaScript with headless Chromium as the first visual validation slice. The approved long-term direction is Python Lambda/Pillow; issue #17 ports this renderer contract to Python and makes that the canonical renderer.
+
 ## Current Status
 
 MVP deployed and verified on GitHub Pages.
