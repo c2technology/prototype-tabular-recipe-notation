@@ -20,7 +20,7 @@ MVP deployed and verified on GitHub Pages.
 
 Live app: <https://c2technology.github.io/prototype-tabular-recipe-notation/>
 
-Issue #17 adds the canonical Python/Pillow renderer for fixture-to-PNG generation. It does not yet wire the renderer into the browser UI or AWS.
+Issue #17 adds the canonical Python/Pillow renderer for fixture-to-PNG generation. Issue #18 adds a local Lambda/API Gateway-shaped Python handler that accepts a TRN matrix JSON request and returns base64-encoded PNG response fields. It does not yet deploy AWS infrastructure.
 
 ## Quick Start
 
@@ -29,6 +29,7 @@ Host Python path:
 ```bash
 npm run check
 npm run coverage:trn-renderer
+npm run coverage:trn-api
 npm run render:trn-fixture
 npm run render:trn-tollhouse
 npm run serve
@@ -77,6 +78,14 @@ python3-pil python3-behave python3-coverage
 3. Pillow draws the grid directly into an RGB image.
 4. Pillow writes PNG bytes or a PNG file.
 
+### Local Python API handler
+
+1. A local Lambda/API Gateway-shaped event supplies a JSON request body containing a TRN matrix fixture.
+2. `trn_api.handler.handler(event, context)` decodes plain or base64-encoded JSON request bodies.
+3. The handler validates and renders the matrix through `trn_renderer.render_trn_png_bytes`.
+4. Valid requests return `statusCode: 200`, `Content-Type: image/png`, `isBase64Encoded: true`, and a base64-encoded PNG body.
+5. Invalid requests return `statusCode: 400`, `Content-Type: application/json`, `isBase64Encoded: false`, and a structured `{ error, message }` JSON body.
+
 ## Architecture Interfaces
 
 ```text
@@ -89,6 +98,9 @@ TrnRenderer -> SVG
 
 Python PNG renderer:
 TRN Matrix Fixture -> render_trn_manifest -> render_trn_image -> render_trn_png_bytes/file -> PNG
+
+Local API handler:
+API Gateway-like event -> trn_api.handler -> render_trn_png_bytes -> base64 image/png response
 ```
 
 See `docs/architecture.md`, `docs/requirements.md`, and `docs/decisions/0003-tdd-pipeline-interfaces.md`.
@@ -98,6 +110,7 @@ See `docs/architecture.md`, `docs/requirements.md`, and `docs/decisions/0003-tdd
 ```bash
 npm run check
 npm run coverage:trn-renderer
+npm run coverage:trn-api
 npm run render:trn-fixture
 npm run render:trn-tollhouse
 python3 -m http.server 4173 --bind 127.0.0.1
@@ -126,7 +139,8 @@ Renderer verification should confirm:
 - `styles.css` — responsive app styling and TRN presentation.
 - `src/app.js` — URL reader, parser, browser TRN model, SVG renderer, UI wiring.
 - `trn_renderer/` — canonical Python/Pillow TRN matrix fixture to PNG renderer.
-- `features/` — executable Gherkin behavior tests for the Python renderer.
+- `trn_api/` — local Lambda/API Gateway-shaped handler that returns PNG responses from TRN matrix JSON request bodies.
+- `features/` — executable Gherkin behavior tests for the Python renderer and local API handler.
 - `tests/` — Node/browser-MVP checks, Python renderer unit tests, and fixtures.
 - `docs/architecture.md` — current architecture, interfaces, diagrams, and renderer contracts.
 - `MEMORY.md` — durable project facts and decisions.
@@ -139,4 +153,5 @@ Renderer verification should confirm:
 - Recipe-site extraction in the browser MVP is best-effort.
 - The public reader service may fail, rate-limit, or return content in unexpected shapes.
 - The Python renderer currently consumes hand-authored TRN matrix fixtures; recipe parsing-to-matrix translation is a later story.
-- This prototype does not yet store recipes or run the AWS backend.
+- This prototype does not yet store recipes or run the deployed AWS backend.
+- The local API handler simulates the Lambda/API Gateway response shape but is not deployed infrastructure.
