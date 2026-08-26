@@ -1,0 +1,6 @@
+artifacts/*.png
+.coverage
+coverage/
+.venv/
+__pycache__/
+*.pyc
