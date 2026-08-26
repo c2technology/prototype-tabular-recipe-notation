@@ -10,6 +10,7 @@ The repository currently contains two working slices:
 2. **Python PNG renderer** — a canonical Python/Pillow renderer in `trn_renderer/`. It renders hand-authored TRN matrix fixtures directly to PNG bytes/files without Chromium, a browser, a GUI, or browser-side rendering. This is the path intended for a future headless AWS Lambda handler.
 3. **Local Docker renderer environment** — a pinned `python:3.11.9-slim` container that installs `fonts-dejavu-core` plus `requirements-dev.txt`, runs renderer verification, and generates PNG review artifacts into a mounted `artifacts/` directory without requiring host Python dependency installation.
 4. **Local Python API handler** — a Lambda/API Gateway-shaped handler in `trn_api/` that accepts a JSON TRN matrix request body and returns either a base64-encoded PNG response or a structured JSON validation error. It is local-only for now and does not require AWS services.
+5. **Invite-only Cognito auth configuration** — a CloudFormation template in `infra/cognito-auth.template.json` configures a Cognito user pool, Google identity provider, Hosted UI client, and a pre-signup trigger that checks sign-ins against manually created Cognito users. No tester email addresses or Google secrets are committed.
 
 ## Product direction
 
@@ -348,6 +349,39 @@ render_trn_png_file(fixture, output_path) -> pathlib.Path
 - writes the PNG file,
 - returns the resolved output path.
 
+## Invite-only Cognito auth configuration
+
+```mermaid
+flowchart LR
+  Admin[Admin]
+  UserPool[Cognito User Pool\nmanual users]
+  Google[Google OAuth]
+  HostedUI[Cognito Hosted UI]
+  Trigger[Pre-signup Lambda\ninvite-only check]
+  Client[Future frontend/client]
+  Tokens[Cognito tokens\nid token includes verified email]
+  Rejected[Rejected sign-in]
+
+  Admin -->|AdminCreateUser| UserPool
+  Client --> HostedUI
+  HostedUI --> Google
+  Google --> HostedUI
+  HostedUI --> Trigger
+  Trigger -->|ListUsers email match exists| UserPool
+  Trigger -->|invited| Tokens
+  Trigger -->|not invited| Rejected
+```
+
+Auth resources are defined in `infra/cognito-auth.template.json`:
+
+- `TrnUserPool` uses email usernames, auto-verifies email, and sets `AdminCreateUserConfig.AllowAdminCreateUserOnly` to block public self-signup.
+- `GoogleIdentityProvider` reads Google OAuth client values from deploy-time parameters, not committed secrets.
+- `TrnUserPoolClient` enables Hosted UI authorization-code flow with `openid`, `email`, and `profile` scopes.
+- `InviteOnlyPreSignUpFunction` queries Cognito `ListUsers` in the current user pool and rejects Google sign-ins when no manually created Cognito user already has that email.
+- `TrnUserPoolDomain` creates the Cognito hosted UI domain from a deploy-time prefix.
+
+The auth contract is documented in `docs/auth.md`. Cognito remains the invitation source; application code must not carry a hardcoded tester email list.
+
 ## Commands
 
 ```bash
@@ -378,6 +412,7 @@ Generated PNG files are local review artifacts and are not committed.
 - existing browser app behavior tests,
 - Python TRN PNG renderer unit/edge-case tests,
 - local Python API handler tests,
+- invite-only Cognito auth configuration tests,
 - executable Gherkin behavior tests with `behave`,
 - HTML sanity checks,
 - JSON fixture sanity checks,
@@ -407,6 +442,17 @@ Issue #18's API handler tests verify:
 - executable Gherkin scenarios cover the valid and invalid local handler flows.
 
 `npm run coverage:trn-api` measures branch coverage for `trn_api/` and enforces 100% for the local handler module.
+
+Issue #19's auth tests verify:
+
+- CloudFormation parses as JSON,
+- public self-signup is blocked through Cognito configuration,
+- email is the Cognito user identity attribute,
+- Google OAuth is configured through deploy-time parameters rather than committed secrets,
+- Hosted UI client uses authorization-code flow and `openid email profile` scopes,
+- pre-signup Lambda trigger is attached and queries Cognito for an existing invited user,
+- no committed tester email list controls access,
+- docs explain manual `AdminCreateUser` invites and the signed-in user identity contract.
 
 ## Known limitations
 
