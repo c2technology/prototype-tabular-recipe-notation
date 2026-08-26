@@ -7,7 +7,6 @@ from pathlib import Path
 
 from PIL import Image
 
-import trn_renderer
 from trn_renderer import FixtureValidationError, render_trn_manifest, render_trn_png_bytes, render_trn_png_file
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -78,15 +77,6 @@ class TrnRendererTests(unittest.TestCase):
             with self.subTest(message=message):
                 with self.assertRaisesRegex(FixtureValidationError, message):
                     render_trn_png_bytes(fixture)
-
-    def test_font_fallback_when_truetype_unavailable(self):
-        original_truetype = trn_renderer.ImageFont.truetype
-        try:
-            trn_renderer.ImageFont.truetype = lambda *args, **kwargs: (_ for _ in ()).throw(OSError("no font"))
-            font = trn_renderer._font(12)
-            self.assertIsNotNone(font)
-        finally:
-            trn_renderer.ImageFont.truetype = original_truetype
 
     def test_cli_usage_error(self):
         result = subprocess.run([sys.executable, "-m", "trn_renderer"], cwd=ROOT, capture_output=True, text=True, check=False)

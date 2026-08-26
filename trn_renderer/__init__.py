@@ -70,21 +70,15 @@ def _validate_fixture(fixture: dict[str, Any]) -> None:
             raise FixtureValidationError(f"TRN mark references unknown column {mark.get('column')}")
 
 
-def _font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
-    names = ["DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf", "Arial Bold.ttf" if bold else "Arial.ttf"]
-    for name in names:
-        try:
-            return ImageFont.truetype(name, size=size)
-        except OSError:
-            pass
-    return ImageFont.load_default()
+def _font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
+    return ImageFont.truetype("DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf", size=size)
 
 
 def _wrapped_lines(text: str, max_chars: int) -> list[str]:
     return textwrap.wrap(str(text), width=max_chars, break_long_words=False) or [""]
 
 
-def _draw_text_block(draw: ImageDraw.ImageDraw, text: str, xy: tuple[int, int], max_chars: int, *, font: ImageFont.ImageFont, fill: str, anchor: str = "la", line_height: int | None = None) -> None:
+def _draw_text_block(draw: ImageDraw.ImageDraw, text: str, xy: tuple[int, int], max_chars: int, *, font: ImageFont.FreeTypeFont | ImageFont.ImageFont, fill: str, anchor: str = "la", line_height: int | None = None) -> None:
     x, y = xy
     step = line_height if line_height is not None else int(getattr(font, "size", 14) * 1.25)
     for index, line in enumerate(_wrapped_lines(text, max_chars)):

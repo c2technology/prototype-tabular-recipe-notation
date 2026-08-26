@@ -19,6 +19,7 @@ Issue #17 adds the canonical Python/Pillow TRN PNG renderer intended for local u
 - Python/Pillow renderer can render hand-authored TRN matrix fixtures to PNG artifacts.
 - Executable Gherkin behavior tests cover Python renderer output for brownies and Toll House fixtures.
 - Renderer coverage command enforces 100% branch coverage for `trn_renderer/__init__.py`.
+- Docker renderer workflow can run the Python renderer verification path and generate PNG artifacts without installing Python dependencies on the host.
 
 ## Verification
 
@@ -29,6 +30,9 @@ npm run check
 npm run coverage:trn-renderer
 npm run render:trn-fixture
 npm run render:trn-tollhouse
+npm run docker:build
+npm run docker:check
+npm run docker:render
 python3 -m http.server 4173 --bind 127.0.0.1
 ```
 

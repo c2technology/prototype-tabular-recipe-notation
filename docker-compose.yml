@@ -1,0 +1,7 @@
+services:
+  renderer:
+    build:
+      context: .
+    image: prototype-trn-renderer:local
+    volumes:
+      - ./artifacts:/app/artifacts
