@@ -20,7 +20,7 @@ MVP deployed and verified on GitHub Pages.
 
 Live app: <https://c2technology.github.io/prototype-tabular-recipe-notation/>
 
-Issue #17 adds the canonical Python/Pillow renderer for fixture-to-PNG generation. Issue #18 adds a local Lambda/API Gateway-shaped Python handler that accepts a TRN matrix JSON request and returns base64-encoded PNG response fields. It does not yet deploy AWS infrastructure.
+Issue #17 adds the canonical Python/Pillow renderer for fixture-to-PNG generation. Issue #18 adds a local Lambda/API Gateway-shaped Python handler that accepts a TRN matrix JSON request and returns base64-encoded PNG response fields. Issue #19 adds repo-owned Cognito Google OAuth configuration for invite-only prototype access. No AWS resources are deployed yet.
 
 ## Quick Start
 
@@ -47,6 +47,17 @@ npm run docker:render
 `npm run render:trn-tollhouse` writes `artifacts/toll-house-cookie-trn.png`.
 
 Open <http://127.0.0.1:4173/> to run the legacy browser MVP locally.
+
+## Auth Configuration
+
+Invite-only Cognito Google OAuth configuration lives in:
+
+```text
+infra/cognito-auth.template.json
+docs/auth.md
+```
+
+The template uses deploy-time parameters for Google OAuth client values and callback/logout URLs. Do not commit real OAuth secrets or tester addresses.
 
 ## Runtime Dependencies
 
@@ -140,9 +151,11 @@ Renderer verification should confirm:
 - `src/app.js` — URL reader, parser, browser TRN model, SVG renderer, UI wiring.
 - `trn_renderer/` — canonical Python/Pillow TRN matrix fixture to PNG renderer.
 - `trn_api/` — local Lambda/API Gateway-shaped handler that returns PNG responses from TRN matrix JSON request bodies.
-- `features/` — executable Gherkin behavior tests for the Python renderer and local API handler.
+- `infra/cognito-auth.template.json` — CloudFormation starting point for invite-only Cognito Google OAuth.
+- `features/` — executable Gherkin behavior tests for the Python renderer, local API handler, and auth configuration.
 - `tests/` — Node/browser-MVP checks, Python renderer unit tests, and fixtures.
-- `docs/architecture.md` — current architecture, interfaces, diagrams, and renderer contracts.
+- `docs/architecture.md` — current architecture, interfaces, diagrams, and renderer/auth contracts.
+- `docs/auth.md` — invite-only Cognito Google OAuth setup notes.
 - `MEMORY.md` — durable project facts and decisions.
 - `docs/handoff.md` — current state and next steps.
 - `docs/findings/` — extraction findings.
