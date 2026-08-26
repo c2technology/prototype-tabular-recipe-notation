@@ -4,8 +4,9 @@
   "private": true,
   "description": "Static GitHub Pages prototype for rendering recipe URLs as Tabular Recipe Notation graphics.",
   "scripts": {
-    "check": "node --check src/app.js && node tests/app.test.js && python3 -m unittest tests/test_trn_renderer.py tests/test_docker_renderer.py && python3 -m behave features && python3 tests/check_html.py && python3 tests/check_fixtures.py",
+    "check": "node --check src/app.js && node tests/app.test.js && python3 -m unittest tests/test_trn_renderer.py tests/test_docker_renderer.py tests/test_trn_api_handler.py && python3 -m behave features && python3 tests/check_html.py && python3 tests/check_fixtures.py",
     "coverage:trn-renderer": "python3 -m coverage run --branch --source=trn_renderer --omit='trn_renderer/__main__.py' -m unittest tests/test_trn_renderer.py && python3 -m coverage report --fail-under=100 --show-missing",
+    "coverage:trn-api": "python3 -m coverage run --branch --source=trn_api -m unittest tests/test_trn_api_handler.py && python3 -m coverage report --fail-under=100 --show-missing",
     "render:trn-fixture": "python3 -m trn_renderer tests/fixtures/hand-authored-trn-matrix.json artifacts/fudgy-brownies-trn.png",
     "render:trn-tollhouse": "python3 -m trn_renderer tests/fixtures/toll-house-cookie-trn-matrix.json artifacts/toll-house-cookie-trn.png",
     "docker:build": "docker compose build renderer",
