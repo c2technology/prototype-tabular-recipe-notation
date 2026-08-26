@@ -8,6 +8,7 @@ The repository currently contains two working slices:
 
 1. **Browser MVP** — a static GitHub Pages-compatible browser application in `src/app.js`. A user enters a recipe URL, the app ingests recipe sources through public CORS-friendly services, detects supported recipe markup, extracts recipe data, builds a browser TRN model, and renders inline SVG.
 2. **Python PNG renderer** — a canonical Python/Pillow renderer in `trn_renderer/`. It renders hand-authored TRN matrix fixtures directly to PNG bytes/files without Chromium, a browser, a GUI, or browser-side rendering. This is the path intended for a future headless AWS Lambda handler.
+3. **Local Docker renderer environment** — a pinned `python:3.11.9-slim` container that installs `fonts-dejavu-core` plus `requirements-dev.txt`, runs renderer verification, and generates PNG review artifacts into a mounted `artifacts/` directory without requiring host Python dependency installation.
 
 ## Product direction
 
@@ -185,6 +186,42 @@ flowchart LR
   File --> PNG
 ```
 
+## Docker renderer workflow
+
+```mermaid
+flowchart LR
+  Host[Developer machine\nDocker only]
+  Compose[docker compose]
+  Image[prototype-trn-renderer:local\npython:3.11.9-slim]
+  Deps[requirements-dev.txt]
+  Verify[verify command\nunittest + behave + coverage + fixture sanity]
+  Render[render-fixtures command]
+  Artifacts[Mounted host artifacts/]
+
+  Host --> Compose
+  Compose --> Image
+  Deps --> Image
+  Image --> Verify
+  Image --> Render
+  Render --> Artifacts
+```
+
+Docker files:
+
+- `Dockerfile` pins the Python runtime, installs deterministic font assets, and installs repo-owned dependencies.
+- `docker-compose.yml` defines the local `renderer` service and mounts `./artifacts:/app/artifacts`.
+- `scripts/docker-renderer.sh` exposes `verify` and `render-fixtures` commands.
+
+Docker commands:
+
+```bash
+npm run docker:build
+npm run docker:check
+npm run docker:render
+```
+
+The Docker workflow intentionally runs only the Python renderer verification path, not the existing static browser MVP. It exists so the renderer can be tested without host Python package installation and with a controlled Python version/dependency set.
+
 ## Python PNG renderer contract
 
 The renderer consumes a TRN matrix fixture with this shape:
@@ -256,6 +293,9 @@ npm run check
 npm run coverage:trn-renderer
 npm run render:trn-fixture
 npm run render:trn-tollhouse
+npm run docker:build
+npm run docker:check
+npm run docker:render
 npm run serve
 ```
 
@@ -276,7 +316,8 @@ Generated PNG files are local review artifacts and are not committed.
 - Python TRN PNG renderer unit/edge-case tests,
 - executable Gherkin behavior tests with `behave`,
 - HTML sanity checks,
-- JSON fixture sanity checks.
+- JSON fixture sanity checks,
+- Docker configuration checks.
 
 Issue #17's renderer tests verify:
 

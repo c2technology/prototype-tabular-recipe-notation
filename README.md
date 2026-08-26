@@ -24,12 +24,22 @@ Issue #17 adds the canonical Python/Pillow renderer for fixture-to-PNG generatio
 
 ## Quick Start
 
+Host Python path:
+
 ```bash
 npm run check
 npm run coverage:trn-renderer
 npm run render:trn-fixture
 npm run render:trn-tollhouse
 npm run serve
+```
+
+Docker path, no host Python dependency installation required:
+
+```bash
+npm run docker:build
+npm run docker:check
+npm run docker:render
 ```
 
 `npm run render:trn-fixture` writes `artifacts/fudgy-brownies-trn.png`.
@@ -41,7 +51,9 @@ Open <http://127.0.0.1:4173/> to run the legacy browser MVP locally.
 
 The canonical PNG renderer uses Python/Pillow and does **not** require Chromium, a browser, a GUI, or browser-side rendering.
 
-For local development, install the Python tooling listed in `requirements-dev.txt` or use distro packages equivalent to:
+The Docker workflow pins the renderer/test environment to `python:3.11.9-slim`, installs `fonts-dejavu-core` for deterministic text rendering, and installs Python dependencies from `requirements-dev.txt`. It mounts `./artifacts` into the container so generated PNGs land on the host for review.
+
+For local development without Docker, install the Python tooling listed in `requirements-dev.txt` or use distro packages equivalent to:
 
 ```bash
 python3-pil python3-behave python3-coverage
