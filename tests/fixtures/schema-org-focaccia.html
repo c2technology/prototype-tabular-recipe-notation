@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Kitchen noise around a recipe</title>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebPage",
+          "name": "Ignore this page node"
+        },
+        {
+          "@type": ["Recipe", "HowTo"],
+          "name": "No-Knead Focaccia",
+          "description": "A long description that is not needed for TRN.",
+          "image": ["https://example.com/focaccia.jpg"],
+          "author": {"@type": "Person", "name": "Example Author"},
+          "aggregateRating": {"@type": "AggregateRating", "ratingValue": "4.9"},
+          "nutrition": {"@type": "NutritionInformation", "calories": "250 calories"},
+          "recipeYield": ["1 pan", "8 servings"],
+          "prepTime": "PT20M",
+          "cookTime": "PT25M",
+          "totalTime": "PT4H45M",
+          "recipeIngredient": [
+            "500 g bread flour",
+            "2 tsp kosher salt",
+            "1 tsp instant yeast",
+            "425 g warm water",
+            "3 tbsp olive oil",
+            "Flaky salt"
+          ],
+          "recipeInstructions": [
+            {
+              "@type": "HowToSection",
+              "name": "Make the Dough",
+              "itemListElement": [
+                {"@type": "HowToStep", "text": "Stir bread flour, kosher salt, instant yeast, and warm water until no dry spots remain."},
+                {"@type": "HowToStep", "text": "Cover and rest until bubbly."}
+              ]
+            },
+            {
+              "@type": "HowToSection",
+              "name": "Bake",
+              "itemListElement": [
+                {"@type": "HowToStep", "name": "Oil the pan and stretch the dough into it."},
+                {"@type": "HowToStep", "description": "Dimple with olive oil, sprinkle flaky salt, and bake until golden."}
+              ]
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+  </head>
+  <body>
+    <p>Comments, ads, ratings, and unrelated page text should not be in normalized recipe output.</p>
+  </body>
+</html>
