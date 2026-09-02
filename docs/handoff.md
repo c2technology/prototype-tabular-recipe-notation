@@ -16,6 +16,7 @@ Issue #17 adds the canonical Python/Pillow TRN PNG renderer for local and Docker
 - Reader fallback remains labeled as heuristic when markup metadata is unavailable.
 - Extracted recipe summary displays title, timing, servings, ingredient count, and step count.
 - SVG TRN graphic can be downloaded from the browser MVP.
+- Python schema.org parser can normalize `Recipe` JSON-LD from HTML/script blocks or raw JSON-LD into source-backed recipe fields.
 - Python/Pillow renderer can render hand-authored TRN matrix fixtures to PNG artifacts.
 - Executable Gherkin behavior tests cover Python renderer output for brownies and Toll House fixtures.
 - Renderer coverage command enforces 100% branch coverage for `trn_renderer/__init__.py`.
@@ -28,6 +29,7 @@ Run from the repository root:
 ```bash
 npm run check
 npm run coverage:trn-renderer
+npm run coverage:recipe-parser
 npm run render:trn-fixture
 npm run render:trn-tollhouse
 npm run docker:build
@@ -51,18 +53,18 @@ artifacts/toll-house-cookie-trn.png
 - Reader fallback is heuristic and should not be treated as a standardized extraction.
 - Ingredient-to-action cell assignment in the browser MVP is still approximate; uncertain method steps should remain in `General method` instead of being forced into ingredient rows.
 - The TRN browser layout currently caps ingredients and steps to keep the SVG readable.
-- The Python renderer consumes hand-authored matrix fixtures only; recipe-to-matrix translation is a later issue.
-- The Python renderer consumes hand-authored matrix fixtures only; URL-to-TRN generation is the next local Docker story.
+- The Python parser does not yet translate normalized recipes into TRN matrix rows/columns/marks.
+- The Python renderer consumes hand-authored matrix fixtures only; URL-to-TRN generation still needs parser-to-matrix translation.
 
 ## Next Steps
 
-1. Generate a TRN PNG from a recipe URL in the local Docker image (#36).
-2. Add Schema.org parsing to normalized recipe data.
-3. Translate normalized recipe data into the TRN matrix model.
-4. Add persistence, auth, and deployment later only after the local Docker URL-to-PNG path is proven.
+1. Translate normalized recipe data into the TRN matrix model.
+2. Generate a TRN PNG from a recipe URL in the local Docker image (#36).
+3. Add persistence, auth, and deployment later only after the local Docker URL-to-PNG path is proven.
 
 ## GitHub Issues
 
 - #17 Implement TRN PNG renderer in Python and Pillow.
 - #32 Run Python TRN renderer in local Docker container.
+- #12 Parse Schema.org Recipe JSON-LD into a normalized recipe object.
 - #36 Generate TRN PNG from recipe URL in local Docker container.

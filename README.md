@@ -20,7 +20,7 @@ MVP deployed and verified on GitHub Pages.
 
 Live app: <https://c2technology.github.io/prototype-tabular-recipe-notation/>
 
-Issue #17 adds the canonical Python/Pillow renderer for fixture-to-PNG generation. Issue #32 adds the local Docker workflow for pinned Python/dependency execution. The current stack intentionally excludes AWS, Lambda, API Gateway, Cognito, OAuth, S3, and DynamoDB.
+Issue #17 adds the canonical Python/Pillow renderer for fixture-to-PNG generation. Issue #32 adds the local Docker workflow for pinned Python/dependency execution. Issue #12 adds a Python schema.org `Recipe` JSON-LD parser that normalizes source-backed recipe fields for the future URL-to-PNG Docker path. The current stack intentionally excludes AWS, Lambda, API Gateway, Cognito, OAuth, S3, and DynamoDB.
 
 ## Quick Start
 
@@ -29,6 +29,7 @@ Host Python path:
 ```bash
 npm run check
 npm run coverage:trn-renderer
+npm run coverage:recipe-parser
 npm run render:trn-fixture
 npm run render:trn-tollhouse
 npm run serve
@@ -77,6 +78,14 @@ python3-pil python3-behave python3-coverage
 3. Pillow draws the grid directly into an RGB image.
 4. Pillow writes PNG bytes or a PNG file.
 
+### Python Schema.org Recipe parser
+
+1. Source HTML or raw JSON-LD is passed to `trn_recipe.parse_schema_org_recipe`.
+2. The parser extracts `<script type="application/ld+json">` blocks or accepts raw JSON-LD documents.
+3. It walks JSON-LD arrays and `@graph` structures to find schema.org `Recipe` nodes.
+4. It returns a normalized recipe with title, source URL, ingredients, ordered instruction steps, instruction sections, recipe yield, and timing fields.
+5. Ratings, reviews, images, author profiles, comments, nutrition, ads, and unrelated page metadata are not copied into parser output.
+
 ## Architecture Interfaces
 
 ```text
@@ -89,6 +98,9 @@ TrnRenderer -> SVG
 
 Python PNG renderer:
 TRN Matrix Fixture -> render_trn_manifest -> render_trn_image -> render_trn_png_bytes/file -> PNG
+
+Python Schema.org parser:
+HTML / JSON-LD -> parse_schema_org_recipe -> NormalizedRecipe
 ```
 
 See `docs/architecture.md`, `docs/requirements.md`, and `docs/decisions/0003-tdd-pipeline-interfaces.md`.
@@ -98,6 +110,7 @@ See `docs/architecture.md`, `docs/requirements.md`, and `docs/decisions/0003-tdd
 ```bash
 npm run check
 npm run coverage:trn-renderer
+npm run coverage:recipe-parser
 npm run render:trn-fixture
 npm run render:trn-tollhouse
 python3 -m http.server 4173 --bind 127.0.0.1
@@ -125,8 +138,9 @@ Renderer verification should confirm:
 - `index.html` — static page shell.
 - `styles.css` — responsive app styling and TRN presentation.
 - `src/app.js` — URL reader, parser, browser TRN model, SVG renderer, UI wiring.
+- `trn_recipe/` — Python schema.org `Recipe` JSON-LD parser and normalized recipe contract.
 - `trn_renderer/` — canonical Python/Pillow TRN matrix fixture to PNG renderer.
-- `features/` — executable Gherkin behavior tests for the Python renderer.
+- `features/` — executable Gherkin behavior tests for the Python parser and renderer.
 - `tests/` — Node/browser-MVP checks, Python renderer unit tests, and fixtures.
 - `docs/architecture.md` — current architecture, interfaces, diagrams, and renderer contracts.
 - `MEMORY.md` — durable project facts and decisions.
@@ -138,5 +152,5 @@ Renderer verification should confirm:
 
 - Recipe-site extraction in the browser MVP is best-effort.
 - The public reader service may fail, rate-limit, or return content in unexpected shapes.
-- The Python renderer currently consumes hand-authored TRN matrix fixtures; recipe parsing-to-matrix translation is a later story.
+- The Python parser normalizes schema.org recipes, but recipe-to-TRN matrix translation is still a later story.
 - This prototype does not yet store recipes or run a deployed backend.

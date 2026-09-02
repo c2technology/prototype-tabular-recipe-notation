@@ -4,11 +4,12 @@ This document describes the current architecture of the Tabular Recipe Notation 
 
 ## Current working concept
 
-The repository currently contains two working slices:
+The repository currently contains four working slices:
 
 1. **Browser MVP** — a static GitHub Pages-compatible browser application in `src/app.js`. A user enters a recipe URL, the app ingests recipe sources through public CORS-friendly services, detects supported recipe markup, extracts recipe data, builds a browser TRN model, and renders inline SVG.
 2. **Python PNG renderer** — a canonical Python/Pillow renderer in `trn_renderer/`. It renders hand-authored TRN matrix fixtures directly to PNG bytes/files without Chromium, a browser, a GUI, browser-side rendering, or cloud services.
-3. **Local Docker renderer environment** — a pinned `python:3.11.9-slim` container that installs `fonts-dejavu-core` plus `requirements-dev.txt`, runs renderer verification, and generates PNG review artifacts into a mounted `artifacts/` directory without requiring host Python dependency installation.
+3. **Python Schema.org Recipe parser** — a deterministic parser in `trn_recipe/` that extracts schema.org `Recipe` JSON-LD from HTML or raw JSON-LD and normalizes only source-backed recipe fields needed for future TRN generation.
+4. **Local Docker renderer environment** — a pinned `python:3.11.9-slim` container that installs `fonts-dejavu-core` plus `requirements-dev.txt`, runs renderer/parser verification, and generates PNG review artifacts into a mounted `artifacts/` directory without requiring host Python dependency installation.
 
 ## Product direction
 
@@ -186,6 +187,48 @@ flowchart LR
   File --> PNG
 ```
 
+## Python Schema.org Recipe parser pipeline
+
+```mermaid
+flowchart LR
+  Source[HTML or raw JSON-LD]
+  Blocks[Extract application/ld+json blocks]
+  Graph[Walk arrays and @graph nodes]
+  Recipe[Best schema.org Recipe node]
+  Normalize[Normalize source-backed fields]
+  Normalized[NormalizedRecipe]
+
+  Source --> Blocks
+  Blocks --> Graph
+  Graph --> Recipe
+  Recipe --> Normalize
+  Normalize --> Normalized
+```
+
+The parser prefers standardized schema.org data and does not copy ratings, reviews, images, ads, author profiles, comments, nutrition, or unrelated page metadata into the normalized recipe object.
+
+## Python Schema.org parser contract
+
+`trn_recipe.parse_schema_org_recipe(raw_text, source_url="Recipe URL")` accepts either source HTML containing `<script type="application/ld+json">` blocks or a raw JSON-LD object/array string. It walks arrays and nested JSON-LD objects, including `@graph`, to find schema.org `Recipe` nodes.
+
+It returns `None` if no usable `Recipe` node exists. Otherwise it returns:
+
+```js
+{
+  title: string,
+  sourceUrl: string,
+  basis: 'schema.org Recipe JSON-LD',
+  ingredients: string[],
+  steps: Array<{ text: string, section: string }>,
+  prepTime: string,
+  cookTime: string,
+  totalTime: string,
+  yield: string[]
+}
+```
+
+Nested `HowToSection.itemListElement[]` and `HowToStep` structures are flattened into ordered steps while preserving section names.
+
 ## Docker renderer workflow
 
 ```mermaid
@@ -210,7 +253,7 @@ Docker files:
 
 - `Dockerfile` pins the Python runtime, installs deterministic font assets, and installs repo-owned dependencies.
 - `docker-compose.yml` defines the local `renderer` service and mounts `./artifacts:/app/artifacts`.
-- `scripts/docker-renderer.sh` exposes `verify` and `render-fixtures` commands.
+- `scripts/docker-renderer.sh` exposes `verify` and `render-fixtures` commands. The `verify` command runs renderer and schema.org parser tests.
 
 Docker commands:
 
@@ -314,6 +357,7 @@ Generated PNG files are local review artifacts and are not committed.
 - JavaScript syntax checks for the existing browser MVP,
 - existing browser app behavior tests,
 - Python TRN PNG renderer unit/edge-case tests,
+- Python schema.org Recipe parser unit tests,
 - executable Gherkin behavior tests with `behave`,
 - HTML sanity checks,
 - JSON fixture sanity checks,
@@ -334,15 +378,26 @@ Issue #17's renderer tests verify:
 
 `npm run coverage:trn-renderer` measures branch coverage for `trn_renderer/__init__.py` and enforces 100% for that renderer module.
 
+Issue #12's parser tests verify:
+
+- schema.org `Recipe` nodes are found inside JSON-LD arrays and `@graph` structures,
+- source ingredient lists are preserved,
+- ordered instruction steps are flattened from nested `HowToSection` / `HowToStep` objects,
+- section names are preserved on normalized steps,
+- superfluous non-TRN metadata is excluded,
+- invalid JSON-LD and non-recipe documents do not produce misleading recipes.
+
+`npm run coverage:recipe-parser` measures branch coverage for `trn_recipe/` and enforces 100% for the parser module.
+
 ## Known limitations
 
 - The browser MVP still uses public CORS-friendly proxies and best-effort extraction.
 - The browser MVP output is legacy SVG and does not yet use the Python PNG renderer.
-- The Python PNG renderer does not parse Schema.org JSON-LD.
 - The Python PNG renderer does not translate recipe steps into TRN rows/columns/marks.
+- The Python Schema.org parser does not fetch URLs itself yet; URL fetching belongs to the Docker URL-to-PNG story.
 - The Python PNG renderer is intentionally local/Docker-only in the current stack.
 
-Future issues will add Schema.org parsing, normalized recipe to TRN matrix translation, and Docker URL-to-PNG generation first. Persistence, auth, and deployment are deferred until after the local Docker path is proven.
+Future issues will add normalized recipe to TRN matrix translation and Docker URL-to-PNG generation first. Persistence, auth, and deployment are deferred until after the local Docker path is proven.
 
 ## Architecture alignment rule
 
