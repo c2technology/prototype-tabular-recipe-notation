@@ -7,7 +7,7 @@ This document describes the current architecture of the Tabular Recipe Notation 
 The repository currently contains two working slices:
 
 1. **Browser MVP** — a static GitHub Pages-compatible browser application in `src/app.js`. A user enters a recipe URL, the app ingests recipe sources through public CORS-friendly services, detects supported recipe markup, extracts recipe data, builds a browser TRN model, and renders inline SVG.
-2. **Python PNG renderer** — a canonical Python/Pillow renderer in `trn_renderer/`. It renders hand-authored TRN matrix fixtures directly to PNG bytes/files without Chromium, a browser, a GUI, or browser-side rendering. This is the path intended for a future headless AWS Lambda handler.
+2. **Python PNG renderer** — a canonical Python/Pillow renderer in `trn_renderer/`. It renders hand-authored TRN matrix fixtures directly to PNG bytes/files without Chromium, a browser, a GUI, browser-side rendering, or cloud services.
 3. **Local Docker renderer environment** — a pinned `python:3.11.9-slim` container that installs `fonts-dejavu-core` plus `requirements-dev.txt`, runs renderer verification, and generates PNG review artifacts into a mounted `artifacts/` directory without requiring host Python dependency installation.
 
 ## Product direction
@@ -277,7 +277,7 @@ render_trn_png_file(fixture, output_path) -> pathlib.Path
 
 - renders a Pillow image,
 - serializes it to PNG bytes,
-- returns bytes suitable for a future Lambda/API Gateway response body.
+- returns bytes suitable for local commands and Docker-generated PNG artifacts.
 
 ### `render_trn_png_file(fixture, output_path)`
 
@@ -340,9 +340,9 @@ Issue #17's renderer tests verify:
 - The browser MVP output is legacy SVG and does not yet use the Python PNG renderer.
 - The Python PNG renderer does not parse Schema.org JSON-LD.
 - The Python PNG renderer does not translate recipe steps into TRN rows/columns/marks.
-- The Python PNG renderer is not yet exposed through a Lambda-shaped API handler.
+- The Python PNG renderer is intentionally local/Docker-only in the current stack.
 
-Future issues will add Lambda-shaped APIs, AWS auth/deployment, persistence, Schema.org parsing, normalized recipe to TRN matrix translation, and cached TRN PNG generation from recipe URLs.
+Future issues will add Schema.org parsing, normalized recipe to TRN matrix translation, and Docker URL-to-PNG generation first. Persistence, auth, and deployment are deferred until after the local Docker path is proven.
 
 ## Architecture alignment rule
 

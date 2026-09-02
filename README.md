@@ -2,7 +2,7 @@
 
 A prototype that accepts recipe input and renders the recipe as a **Tabular Recipe Notation (TRN)** graphic.
 
-The current deployed browser MVP is still a static GitHub Pages app that renders inline SVG from recipe URLs. The current backend-aligned renderer slice adds a canonical **Python/Pillow PNG renderer** that is intended to run locally now and later inside a headless AWS Lambda.
+The current deployed browser MVP is still a static GitHub Pages app that renders inline SVG from recipe URLs. The current local renderer slice adds a canonical **Python/Pillow PNG renderer** that runs locally and in Docker without browser or cloud dependencies.
 
 TRN target format for the Python PNG renderer means:
 
@@ -20,7 +20,7 @@ MVP deployed and verified on GitHub Pages.
 
 Live app: <https://c2technology.github.io/prototype-tabular-recipe-notation/>
 
-Issue #17 adds the canonical Python/Pillow renderer for fixture-to-PNG generation. It does not yet wire the renderer into the browser UI or AWS.
+Issue #17 adds the canonical Python/Pillow renderer for fixture-to-PNG generation. Issue #32 adds the local Docker workflow for pinned Python/dependency execution. The current stack intentionally excludes AWS, Lambda, API Gateway, Cognito, OAuth, S3, and DynamoDB.
 
 ## Quick Start
 
@@ -139,4 +139,4 @@ Renderer verification should confirm:
 - Recipe-site extraction in the browser MVP is best-effort.
 - The public reader service may fail, rate-limit, or return content in unexpected shapes.
 - The Python renderer currently consumes hand-authored TRN matrix fixtures; recipe parsing-to-matrix translation is a later story.
-- This prototype does not yet store recipes or run the AWS backend.
+- This prototype does not yet store recipes or run a deployed backend.

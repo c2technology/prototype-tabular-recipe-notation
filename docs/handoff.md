@@ -6,7 +6,7 @@ A static browser prototype accepts a recipe URL, detects supported recipe markup
 
 Live GitHub Pages URL: <https://c2technology.github.io/prototype-tabular-recipe-notation/>
 
-Issue #17 adds the canonical Python/Pillow TRN PNG renderer intended for local use now and future headless AWS Lambda use. The renderer consumes hand-authored TRN matrix fixtures and writes PNG bytes/files without Chromium, a browser, or a GUI.
+Issue #17 adds the canonical Python/Pillow TRN PNG renderer for local and Docker use. The renderer consumes hand-authored TRN matrix fixtures and writes PNG bytes/files without Chromium, a browser, a GUI, or cloud services.
 
 ## What Works
 
@@ -52,20 +52,17 @@ artifacts/toll-house-cookie-trn.png
 - Ingredient-to-action cell assignment in the browser MVP is still approximate; uncertain method steps should remain in `General method` instead of being forced into ingredient rows.
 - The TRN browser layout currently caps ingredients and steps to keep the SVG readable.
 - The Python renderer consumes hand-authored matrix fixtures only; recipe-to-matrix translation is a later issue.
-- The Python renderer is not yet packaged as a Lambda/API Gateway handler.
+- The Python renderer consumes hand-authored matrix fixtures only; URL-to-TRN generation is the next local Docker story.
 
 ## Next Steps
 
-1. Add local Python API handler for TRN matrix to PNG.
-2. Configure invite-only Cognito Google OAuth.
-3. Deploy authenticated AWS fixture PNG endpoint.
-4. Add Amplify Bootstrap/jQuery frontend shell.
-5. Add S3/DynamoDB persistence and recipe box features.
-6. Add Schema.org parsing to normalized recipe data, then normalized recipe to TRN matrix translation.
+1. Generate a TRN PNG from a recipe URL in the local Docker image (#36).
+2. Add Schema.org parsing to normalized recipe data.
+3. Translate normalized recipe data into the TRN matrix model.
+4. Add persistence, auth, and deployment later only after the local Docker URL-to-PNG path is proven.
 
 ## GitHub Issues
 
 - #17 Implement TRN PNG renderer in Python and Pillow.
-- #18 Add local Python API handler for TRN matrix to PNG.
-- #19 Configure invite-only Cognito Google OAuth.
-- #20 Deploy authenticated AWS fixture PNG endpoint.
+- #32 Run Python TRN renderer in local Docker container.
+- #36 Generate TRN PNG from recipe URL in local Docker container.
