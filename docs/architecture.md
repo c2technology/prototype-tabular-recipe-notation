@@ -1,14 +1,30 @@
 # Architecture
 
-This document describes the current architecture of the Tabular Recipe Notation (TRN) prototype. It must stay aligned with code changes in the same commit whenever the application structure, interfaces, data model, fetch behavior, parser behavior, or renderer behavior changes.
+This document describes the current architecture of the Tabular Recipe Notation (TRN) prototype. It must stay aligned with code changes in the same commit whenever application structure, exported interfaces, parsing behavior, source-ingestion behavior, renderer behavior, model shape, or major data contracts change.
 
-## Current Working Concept
+## Current working concept
 
-The app is a static GitHub Pages-compatible browser application. A user enters a recipe URL, the app ingests recipe sources through public CORS-friendly services, detects supported recipe markup, extracts a recipe, builds a TRN model, and renders the model as an inline SVG graphic.
+The repository currently contains two working slices:
 
-The implementation currently lives in `src/app.js` with tests in `tests/app.test.js`. The architecture is intentionally small but now has explicit pipeline interfaces so each stage can be tested independently.
+1. **Browser MVP** — a static GitHub Pages-compatible browser application in `src/app.js`. A user enters a recipe URL, the app ingests recipe sources through public CORS-friendly services, detects supported recipe markup, extracts recipe data, builds a browser TRN model, and renders inline SVG.
+2. **Python PNG renderer** — a canonical Python/Pillow renderer in `trn_renderer/`. It renders hand-authored TRN matrix fixtures directly to PNG bytes/files without Chromium, a browser, a GUI, browser-side rendering, or cloud services.
+3. **Local Docker renderer environment** — a pinned `python:3.11.9-slim` container that installs `fonts-dejavu-core` plus `requirements-dev.txt`, runs renderer verification, and generates PNG review artifacts into a mounted `artifacts/` directory without requiring host Python dependency installation.
 
-## Runtime Context
+## Product direction
+
+TRN is a grid-style recipe notation inspired by the Recipe Grid reference at <https://toddschiller.com/artifacts/recipe-grid/#p=brownies>.
+
+For the Python PNG renderer contract:
+
+- rows are ingredients,
+- columns are actions/operations moving left-to-right,
+- marks show ingredient participation in an action,
+- optional spans show combined/intermediate preparations,
+- the finished dish appears at the far right,
+- superfluous recipe prose is removed,
+- the output is a PNG artifact.
+
+## Runtime context
 
 ```mermaid
 flowchart LR
@@ -17,6 +33,9 @@ flowchart LR
   MetadataProxy[Metadata Proxy\napi.allorigins.win]
   ReaderProxy[Reader Proxy\nr.jina.ai]
   RecipeSite[Recipe Website]
+  Fixture[Hand-authored TRN\nMatrix Fixture JSON]
+  PyRenderer[Python trn_renderer\nPillow]
+  Png[PNG Artifact / Bytes]
 
   User -->|enters recipe URL| Browser
   Browser -->|HTML metadata fetch| MetadataProxy
@@ -24,9 +43,12 @@ flowchart LR
   Browser -->|reader markdown fallback| ReaderProxy
   ReaderProxy --> RecipeSite
   Browser -->|renders inline SVG| User
+
+  Fixture --> PyRenderer
+  PyRenderer -->|draws directly with Pillow| Png
 ```
 
-## Pipeline Overview
+## Browser MVP pipeline
 
 ```mermaid
 flowchart TD
@@ -39,13 +61,13 @@ flowchart TD
   F --> H[ExtractedRecipe]
   G --> H
   H --> I[TrnBuilder]
-  I --> J[TrnModel]
+  I --> J[Browser TrnModel]
   J --> K[TrnRenderer]
   K --> L[SVG string]
   L --> M[Browser DOM]
 ```
 
-## Interface Contracts
+## Browser interface contracts
 
 These are lightweight JavaScript object contracts, not TypeScript types.
 
@@ -87,7 +109,7 @@ These are lightweight JavaScript object contracts, not TypeScript types.
 }
 ```
 
-### TrnModel
+### Browser TrnModel
 
 ```js
 {
@@ -99,9 +121,9 @@ These are lightweight JavaScript object contracts, not TypeScript types.
 }
 ```
 
-Current limitation: `rows[].ingredient` may contain the synthetic `General method` row. Issue #5 tracks separating synthetic method rows from real ingredient rows.
+Current limitation: the browser MVP model is not the Product Owner's target TRN matrix. The current backlog moves toward a PNG matrix generator where rows are ingredients and columns are actions.
 
-## Implemented Functions
+## Browser implemented functions
 
 ```mermaid
 classDiagram
@@ -143,92 +165,185 @@ classDiagram
   Pipeline --> TrnRenderer
 ```
 
-### Source fetchers
-
-- `metadataUrl(inputUrl)` builds the CORS metadata proxy URL.
-- `readerUrl(inputUrl)` builds the reader markdown fallback URL.
-- `fetchRecipeSource(url, options)` tries metadata first with timeout; if metadata fails, hangs, or does not produce supported markup, it falls back to reader markdown.
-
-### Markup detection
-
-- `detectRecipeMarkup(sources)` scans provided sources for supported recipe markup.
-- Current supported standard: schema.org `Recipe` JSON-LD.
-- No markup returns `standard: 'none'` and `confidence: 0`.
-
-### Extraction
-
-- `parseRecipeFromJsonLd(rawText, sourceUrl)` parses `application/ld+json` script blocks or raw JSON-LD text, finds schema.org `Recipe` nodes, and extracts standardized fields.
-- `extractRecipeFromMarkup(detection)` converts a successful detection into an `ExtractedRecipe`.
-- `parseRecipeText(text, sourceUrl)` remains a compatibility helper. It tries JSON-LD first and then falls back to reader-markdown heuristics.
-
-### TRN building
-
-- `buildTrnModel(recipe)` turns an `ExtractedRecipe` into rows, phases, and cells.
-- If `instructionSections` exists, phases are derived from source `HowToSection` names.
-- If no structured sections exist, the fallback phases are `Prep`, `Cook`, and `Finish`.
-- Unmatched structured steps currently go to a synthetic `General method` row.
-
-### Rendering
-
-- `renderTrnSvg(recipe)` builds a `TrnModel` and renders it as inline SVG.
-- The browser stores the SVG for download.
-
-## Form Submit Sequence
+## Python PNG renderer pipeline
 
 ```mermaid
-sequenceDiagram
-  participant U as User
-  participant UI as Browser UI
-  participant M as Metadata Proxy
-  participant R as Reader Proxy
-  participant P as Parser/Pipeline
-  participant S as SVG Renderer
+flowchart LR
+  Fixture[TRN Matrix Fixture]
+  Validate[Fixture validation]
+  Manifest[render_trn_manifest]
+  Image[render_trn_image]
+  Bytes[render_trn_png_bytes]
+  File[render_trn_png_file]
+  PNG[PNG]
 
-  U->>UI: Paste recipe URL and click Render TRN
-  UI->>UI: Show fetching status
-  UI->>M: Fetch page HTML metadata with timeout
-  alt Metadata returns supported JSON-LD
-    M-->>UI: HTML / JSON-LD text
-    UI->>P: parse schema.org Recipe
-  else Metadata fails or times out
-    UI->>R: Fetch reader markdown fallback
-    R-->>UI: Markdown-like text
-    UI->>P: parse fallback heuristics
-  end
-  P->>S: Build TRN model and SVG
-  S-->>UI: SVG string
-  UI->>U: Display SVG, summary, and enable download
+  Fixture --> Validate
+  Validate --> Manifest
+  Manifest --> Image
+  Image --> Bytes
+  Bytes --> File
+  Bytes --> PNG
+  File --> PNG
 ```
 
-## Testing Strategy
+## Docker renderer workflow
 
-Tests are no-dependency Node/Python checks run by:
+```mermaid
+flowchart LR
+  Host[Developer machine\nDocker only]
+  Compose[docker compose]
+  Image[prototype-trn-renderer:local\npython:3.11.9-slim]
+  Deps[requirements-dev.txt]
+  Verify[verify command\nunittest + behave + coverage + fixture sanity]
+  Render[render-fixtures command]
+  Artifacts[Mounted host artifacts/]
+
+  Host --> Compose
+  Compose --> Image
+  Deps --> Image
+  Image --> Verify
+  Image --> Render
+  Render --> Artifacts
+```
+
+Docker files:
+
+- `Dockerfile` pins the Python runtime, installs deterministic font assets, and installs repo-owned dependencies.
+- `docker-compose.yml` defines the local `renderer` service and mounts `./artifacts:/app/artifacts`.
+- `scripts/docker-renderer.sh` exposes `verify` and `render-fixtures` commands.
+
+Docker commands:
+
+```bash
+npm run docker:build
+npm run docker:check
+npm run docker:render
+```
+
+The Docker workflow intentionally runs only the Python renderer verification path, not the existing static browser MVP. It exists so the renderer can be tested without host Python package installation and with a controlled Python version/dependency set.
+
+## Python PNG renderer contract
+
+The renderer consumes a TRN matrix fixture with this shape:
+
+```js
+{
+  title: string,
+  finalDish: string,
+  rows: Array<{ id: string, label: string }>,
+  columns: Array<{ id: string, label: string }>,
+  spans?: Array<{
+    id?: string,
+    label?: string,
+    rows: string[],
+    fromColumn: string,
+    toColumn: string
+  }>,
+  marks: Array<{ row: string, column: string }>
+}
+```
+
+Ignored/superfluous fixture fields may exist for testing, but renderer output must not include them.
+
+## Python PNG renderer module
+
+`trn_renderer` exports:
+
+```python
+FixtureValidationError
+render_trn_manifest(fixture) -> dict
+render_trn_image(fixture) -> PIL.Image.Image
+render_trn_png_bytes(fixture) -> bytes
+render_trn_png_file(fixture, output_path) -> pathlib.Path
+```
+
+### `render_trn_manifest(fixture)`
+
+- validates fixture structure and references,
+- returns semantic render metadata for tests and future API metadata,
+- includes title, final dish, ingredient rows, action columns, participation marks, combination spans, and rendered text,
+- excludes superfluous fixture prose.
+
+### `render_trn_image(fixture)`
+
+- creates an RGB Pillow image,
+- draws ingredient rows on the left,
+- draws action columns left-to-right,
+- draws one consistent participation mark for each `marks[]` entry,
+- draws optional combination spans for each `spans[]` entry,
+- draws the finished dish column on the right.
+
+### `render_trn_png_bytes(fixture)`
+
+- renders a Pillow image,
+- serializes it to PNG bytes,
+- returns bytes suitable for local commands and Docker-generated PNG artifacts.
+
+### `render_trn_png_file(fixture, output_path)`
+
+- renders PNG bytes,
+- creates the output directory if needed,
+- writes the PNG file,
+- returns the resolved output path.
+
+## Commands
 
 ```bash
 npm run check
+npm run coverage:trn-renderer
+npm run render:trn-fixture
+npm run render:trn-tollhouse
+npm run docker:build
+npm run docker:check
+npm run docker:render
+npm run serve
 ```
 
-`tests/app.test.js` covers:
+Fixture rendering commands produce local review artifacts under:
 
-- demo recipe parsing,
-- reader and metadata proxy URL helpers,
-- Dining with Skyler reader fallback extraction,
-- schema.org `Recipe` JSON-LD extraction,
-- section-aware TRN phase generation,
-- no-markup detection,
-- pipeline output shape,
-- metadata timeout fallback.
+```text
+artifacts/
+```
 
-`tests/check_html.py` covers static HTML sanity: required DOM IDs and app script reference.
+Generated PNG files are local review artifacts and are not committed.
 
-## Known Limitations
+## Testing strategy
 
-- Static deployment depends on public proxy services for cross-origin recipe access.
-- Only schema.org `Recipe` JSON-LD is treated as a standardized markup source today.
-- Reader markdown fallback is heuristic and can be incomplete.
-- Ingredient/action relationship mapping is approximate; issue #5 tracks notation cleanup, method-row separation, and false-positive matching.
-- There is no persistent storage or backend scraper.
+`npm run check` runs:
 
-## Architecture Alignment Rule
+- JavaScript syntax checks for the existing browser MVP,
+- existing browser app behavior tests,
+- Python TRN PNG renderer unit/edge-case tests,
+- executable Gherkin behavior tests with `behave`,
+- HTML sanity checks,
+- JSON fixture sanity checks,
+- Docker configuration checks.
+
+Issue #17's renderer tests verify:
+
+- executable Gherkin scenarios bind to step definitions and render both fixture PNGs,
+- a fixture can define ingredient rows, action columns, marks, spans, and final dish label,
+- valid PNG bytes and files are produced,
+- semantic manifest contains ingredient rows,
+- semantic manifest contains action columns,
+- semantic manifest contains participation marks and spans,
+- semantic manifest contains the finished dish,
+- superfluous prose is absent from renderer output,
+- validation rejects malformed fixture references,
+- CLI success and usage-error paths are covered.
+
+`npm run coverage:trn-renderer` measures branch coverage for `trn_renderer/__init__.py` and enforces 100% for that renderer module.
+
+## Known limitations
+
+- The browser MVP still uses public CORS-friendly proxies and best-effort extraction.
+- The browser MVP output is legacy SVG and does not yet use the Python PNG renderer.
+- The Python PNG renderer does not parse Schema.org JSON-LD.
+- The Python PNG renderer does not translate recipe steps into TRN rows/columns/marks.
+- The Python PNG renderer is intentionally local/Docker-only in the current stack.
+
+Future issues will add Schema.org parsing, normalized recipe to TRN matrix translation, and Docker URL-to-PNG generation first. Persistence, auth, and deployment are deferred until after the local Docker path is proven.
+
+## Architecture alignment rule
 
 Any PR that changes application structure, exported interfaces, parsing behavior, source-ingestion behavior, TRN model shape, rendering behavior, or major data contracts must update this document in the same commit as the code change.
