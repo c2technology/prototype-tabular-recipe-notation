@@ -9,7 +9,6 @@ The repository currently contains two working slices:
 1. **Browser MVP** — a static GitHub Pages-compatible browser application in `src/app.js`. A user enters a recipe URL, the app ingests recipe sources through public CORS-friendly services, detects supported recipe markup, extracts recipe data, builds a browser TRN model, and renders inline SVG.
 2. **Python PNG renderer** — a canonical Python/Pillow renderer in `trn_renderer/`. It renders hand-authored TRN matrix fixtures directly to PNG bytes/files without Chromium, a browser, a GUI, or browser-side rendering. This is the path intended for a future headless AWS Lambda handler.
 3. **Local Docker renderer environment** — a pinned `python:3.11.9-slim` container that installs `fonts-dejavu-core` plus `requirements-dev.txt`, runs renderer verification, and generates PNG review artifacts into a mounted `artifacts/` directory without requiring host Python dependency installation.
-4. **Local Python API handler** — a Lambda/API Gateway-shaped handler in `trn_api/` that accepts a JSON TRN matrix request body and returns either a base64-encoded PNG response or a structured JSON validation error. It is local-only for now and does not require AWS services.
 
 ## Product direction
 
@@ -36,8 +35,6 @@ flowchart LR
   RecipeSite[Recipe Website]
   Fixture[Hand-authored TRN\nMatrix Fixture JSON]
   PyRenderer[Python trn_renderer\nPillow]
-  ApiHandler[Local trn_api.handler\nLambda/API Gateway shape]
-  ApiResponse[Base64 image/png\nAPI response]
   Png[PNG Artifact / Bytes]
 
   User -->|enters recipe URL| Browser
@@ -49,9 +46,6 @@ flowchart LR
 
   Fixture --> PyRenderer
   PyRenderer -->|draws directly with Pillow| Png
-  Fixture --> ApiHandler
-  ApiHandler --> PyRenderer
-  ApiHandler --> ApiResponse
 ```
 
 ## Browser MVP pipeline
@@ -192,62 +186,6 @@ flowchart LR
   File --> PNG
 ```
 
-## Local API handler pipeline
-
-```mermaid
-flowchart LR
-  Event[API Gateway-like event\nbody + isBase64Encoded]
-  Decode[Decode plain/base64 JSON body]
-  Validate[TRN matrix validation]
-  Render[render_trn_png_bytes]
-  PngResp[200 image/png\nbase64 body]
-  ErrorResp[400 application/json\nstructured error]
-
-  Event --> Decode
-  Decode --> Validate
-  Validate --> Render
-  Render --> PngResp
-  Decode --> ErrorResp
-  Validate --> ErrorResp
-```
-
-`trn_api.handler.handler(event, context)` is intentionally Lambda-shaped but local-only for this story. It accepts API Gateway-style events so the next AWS story can wrap or reuse the same contract.
-
-Supported request forms:
-
-```python
-{"body": "{...TRN matrix JSON...}", "isBase64Encoded": False}
-{"body": "<base64 utf-8 JSON>", "isBase64Encoded": True}
-```
-
-Successful response:
-
-```python
-{
-  "statusCode": 200,
-  "headers": {"Content-Type": "image/png", "Cache-Control": "no-store"},
-  "isBase64Encoded": True,
-  "body": "<base64 PNG bytes>"
-}
-```
-
-Error response:
-
-```python
-{
-  "statusCode": 400,
-  "headers": {"Content-Type": "application/json", "Cache-Control": "no-store"},
-  "isBase64Encoded": False,
-  "body": "{\"error\":\"invalid_trn_matrix\",\"message\":\"...\"}"
-}
-```
-
-Current error categories:
-
-- `invalid_request` for missing/malformed event body or base64 payload,
-- `invalid_json` for non-JSON bodies,
-- `invalid_trn_matrix` for renderer fixture validation failures.
-
 ## Docker renderer workflow
 
 ```mermaid
@@ -353,7 +291,6 @@ render_trn_png_file(fixture, output_path) -> pathlib.Path
 ```bash
 npm run check
 npm run coverage:trn-renderer
-npm run coverage:trn-api
 npm run render:trn-fixture
 npm run render:trn-tollhouse
 npm run docker:build
@@ -377,7 +314,6 @@ Generated PNG files are local review artifacts and are not committed.
 - JavaScript syntax checks for the existing browser MVP,
 - existing browser app behavior tests,
 - Python TRN PNG renderer unit/edge-case tests,
-- local Python API handler tests,
 - executable Gherkin behavior tests with `behave`,
 - HTML sanity checks,
 - JSON fixture sanity checks,
@@ -398,25 +334,15 @@ Issue #17's renderer tests verify:
 
 `npm run coverage:trn-renderer` measures branch coverage for `trn_renderer/__init__.py` and enforces 100% for that renderer module.
 
-Issue #18's API handler tests verify:
-
-- valid plain JSON request bodies return `200` PNG responses,
-- valid base64-encoded JSON request bodies return `200` PNG responses,
-- PNG responses use `Content-Type: image/png` and `isBase64Encoded: true`,
-- missing event bodies, non-object events, invalid base64, invalid JSON, and invalid TRN matrices return structured JSON `400` errors,
-- executable Gherkin scenarios cover the valid and invalid local handler flows.
-
-`npm run coverage:trn-api` measures branch coverage for `trn_api/` and enforces 100% for the local handler module.
-
 ## Known limitations
 
 - The browser MVP still uses public CORS-friendly proxies and best-effort extraction.
 - The browser MVP output is legacy SVG and does not yet use the Python PNG renderer.
 - The Python PNG renderer does not parse Schema.org JSON-LD.
 - The Python PNG renderer does not translate recipe steps into TRN rows/columns/marks.
-- The Python PNG renderer is exposed only through local fixture commands and a local Lambda-shaped handler; no deployed AWS endpoint exists yet.
+- The Python PNG renderer is not yet exposed through a Lambda-shaped API handler.
 
-Future issues will add AWS auth/deployment, persistence, Schema.org parsing, normalized recipe to TRN matrix translation, and cached TRN PNG generation from recipe URLs.
+Future issues will add Lambda-shaped APIs, AWS auth/deployment, persistence, Schema.org parsing, normalized recipe to TRN matrix translation, and cached TRN PNG generation from recipe URLs.
 
 ## Architecture alignment rule
 

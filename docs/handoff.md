@@ -20,7 +20,6 @@ Issue #17 adds the canonical Python/Pillow TRN PNG renderer intended for local u
 - Executable Gherkin behavior tests cover Python renderer output for brownies and Toll House fixtures.
 - Renderer coverage command enforces 100% branch coverage for `trn_renderer/__init__.py`.
 - Docker renderer workflow can run the Python renderer verification path and generate PNG artifacts without installing Python dependencies on the host.
-- Local Lambda/API Gateway-shaped Python handler can accept a TRN matrix JSON request and return a base64 `image/png` response or structured JSON `400` error.
 
 ## Verification
 
@@ -29,7 +28,6 @@ Run from the repository root:
 ```bash
 npm run check
 npm run coverage:trn-renderer
-npm run coverage:trn-api
 npm run render:trn-fixture
 npm run render:trn-tollhouse
 npm run docker:build
@@ -54,15 +52,16 @@ artifacts/toll-house-cookie-trn.png
 - Ingredient-to-action cell assignment in the browser MVP is still approximate; uncertain method steps should remain in `General method` instead of being forced into ingredient rows.
 - The TRN browser layout currently caps ingredients and steps to keep the SVG readable.
 - The Python renderer consumes hand-authored matrix fixtures only; recipe-to-matrix translation is a later issue.
-- The local API handler is not deployed to AWS yet.
+- The Python renderer is not yet packaged as a Lambda/API Gateway handler.
 
 ## Next Steps
 
-1. Configure invite-only Cognito Google OAuth.
-2. Deploy authenticated AWS fixture PNG endpoint.
-3. Add Amplify Bootstrap/jQuery frontend shell.
-4. Add S3/DynamoDB persistence and recipe box features.
-5. Add Schema.org parsing to normalized recipe data, then normalized recipe to TRN matrix translation.
+1. Add local Python API handler for TRN matrix to PNG.
+2. Configure invite-only Cognito Google OAuth.
+3. Deploy authenticated AWS fixture PNG endpoint.
+4. Add Amplify Bootstrap/jQuery frontend shell.
+5. Add S3/DynamoDB persistence and recipe box features.
+6. Add Schema.org parsing to normalized recipe data, then normalized recipe to TRN matrix translation.
 
 ## GitHub Issues
 

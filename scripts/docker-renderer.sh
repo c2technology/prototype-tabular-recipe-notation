@@ -3,11 +3,9 @@ set -eu
 
 case "${1:-verify}" in
   verify)
-    python -m unittest tests/test_trn_renderer.py tests/test_trn_api_handler.py
+    python -m unittest tests/test_trn_renderer.py
     python -m behave features
     python -m coverage run --branch --source=trn_renderer --omit='trn_renderer/__main__.py' -m unittest tests/test_trn_renderer.py
-    python -m coverage report --fail-under=100 --show-missing
-    python -m coverage run --branch --source=trn_api -m unittest tests/test_trn_api_handler.py
     python -m coverage report --fail-under=100 --show-missing
     python tests/check_fixtures.py
     ;;
