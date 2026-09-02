@@ -22,7 +22,7 @@ class DockerRendererConfigTests(unittest.TestCase):
     def test_docker_script_exposes_verify_and_render_fixture_commands(self):
         script = (ROOT / "scripts" / "docker-renderer.sh").read_text(encoding="utf-8")
         self.assertIn('verify)', script)
-        self.assertIn("python -m unittest tests/test_trn_renderer.py tests/test_trn_api_handler.py tests/test_cognito_auth_config.py", script)
+        self.assertIn("python -m unittest tests/test_trn_renderer.py tests/test_trn_api_handler.py", script)
         self.assertIn("python -m behave features", script)
         self.assertIn("python -m coverage report --fail-under=100", script)
         self.assertIn("python -m coverage run --branch --source=trn_api -m unittest tests/test_trn_api_handler.py", script)

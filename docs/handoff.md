@@ -21,7 +21,6 @@ Issue #17 adds the canonical Python/Pillow TRN PNG renderer intended for local u
 - Renderer coverage command enforces 100% branch coverage for `trn_renderer/__init__.py`.
 - Docker renderer workflow can run the Python renderer verification path and generate PNG artifacts without installing Python dependencies on the host.
 - Local Lambda/API Gateway-shaped Python handler can accept a TRN matrix JSON request and return a base64 `image/png` response or structured JSON `400` error.
-- Invite-only Cognito Google OAuth is represented as repo-owned CloudFormation configuration with manual Cognito users as the invitation source, no committed tester email list, and a pre-signup trigger for Google sign-ins.
 
 ## Verification
 
@@ -59,10 +58,11 @@ artifacts/toll-house-cookie-trn.png
 
 ## Next Steps
 
-1. Deploy authenticated AWS fixture PNG endpoint.
-2. Add Amplify Bootstrap/jQuery frontend shell.
-3. Add S3/DynamoDB persistence and recipe box features.
-4. Add Schema.org parsing to normalized recipe data, then normalized recipe to TRN matrix translation.
+1. Configure invite-only Cognito Google OAuth.
+2. Deploy authenticated AWS fixture PNG endpoint.
+3. Add Amplify Bootstrap/jQuery frontend shell.
+4. Add S3/DynamoDB persistence and recipe box features.
+5. Add Schema.org parsing to normalized recipe data, then normalized recipe to TRN matrix translation.
 
 ## GitHub Issues
 
